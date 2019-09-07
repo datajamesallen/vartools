@@ -1,11 +1,11 @@
 import urllib.request
 import xml.etree.ElementTree as ET
 import json
-import xml_lib
 import xml
 import datetime
 import time
-import varfunctions as varfx
+from vartools.database import varfx
+from vartools.database import xmlfx
 import sys
 import sqlite3
 import copy
@@ -49,12 +49,12 @@ def geturlbar(genelist):
 
 def xml2dict(xml):
     '''
-    the ncbi api returns the data as xml, this parses the xml_lib.py
+    the ncbi api returns the data as xml, this parses the xmlfx.py
     (should be included in this directory)
     '''
     tree = ET.parse(xml)
     root = tree.getroot()
-    newdict = xml_lib.XmlDictConfig(root)
+    newdict = xmlfx.XmlDictConfig(root)
     return(newdict)
 
 def rmcom(stringi):
@@ -361,7 +361,7 @@ hclinvar_obs = ['clinvar_VariationID','clinvar_ObsID','clinvar_AlleleSource',
 hclinvar_obs_phen = ['clinvar_VariationID','clinvar_ObsID','clinvar_AffectedStatus',
             'clinvar_Phenotype','clinvar_PhenotypeID','clinvar_phenXRefDB','clinvar_phenXRefID']
 
-def script():
+def clinvar_script():
     print("=====================================================")
     print("|  Clinvar Data Miner for Nonsynonymous Variants    |")
     print("|       Created by James Allen 2019 CFERV           |")
@@ -382,7 +382,7 @@ def script():
     return(None)
 
 if __name__ == "__main__":
-    script()
+    clinvar_script()
 
 
 

@@ -6,13 +6,14 @@ from configparser import RawConfigParser
 @click.group()
 #@click.argument('test')
 def db():
+    """ all database related commands """
     pass
 
 BASEDIR = os.path.dirname(__file__)
 
 @click.command()
 @click.argument('dbpath')
-def connect(dbpath):
+def link(dbpath):
     """ connects to the database at the given path, if it exits """
     dbpath_abs = os.path.abspath(dbpath)
     if os.path.isfile(dbpath_abs):
@@ -39,6 +40,7 @@ def getdbpath():
 
 @click.command()
 def show():
+    """ show the path of the currently linked database """
     print(getdbpath())
 
 @click.command()
@@ -51,8 +53,21 @@ def initdb(name):
 def dropdb(name):
     click.echo('Dropped the database')
 
+@click.group()
+def clinvar():
+    pass
+
+from vartools.database.clinvar import clinvar_script
+
+@click.command()
+def update():
+    clinvar_script()
+
+clinvar.add_command(update)
+
+db.add_command(link)
 db.add_command(show)
-db.add_command(connect)
+db.add_command(clinvar)
 
 @click.group()
 def oo():
