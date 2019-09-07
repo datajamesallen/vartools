@@ -35,7 +35,7 @@ def getdbpath():
     parser = RawConfigParser()
     configdir = os.path.join(BASEDIR, 'config.ini')
     print(configdir)
-    parser.read('config.ini')
+    parser.read(configdir)
     return parser.get('database','path')
 
 @click.command()
@@ -43,9 +43,16 @@ def show():
     """ show the path of the currently linked database """
     print(getdbpath())
 
+from vartools.database.database import dbinitdef
+
 @click.command()
 @click.argument('name')
 def initdb(name):
+    """ initialize a sqlite database with default schema """
+    dbpath = os.path.abspath(name)
+    print(dbpath)
+    dbinitdef(dbpath)
+    link(dbpath)
     click.echo('Initialized the database: ' + name)
 
 @click.command()
@@ -67,6 +74,7 @@ clinvar.add_command(update)
 
 db.add_command(link)
 db.add_command(show)
+db.add_command(initdb)
 db.add_command(clinvar)
 
 @click.group()

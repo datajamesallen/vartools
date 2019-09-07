@@ -19,7 +19,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=dependencies,
-    package_data = {'vartools': ['oocytes/blank.oo', 'config.ini']},
+    package_data = {'vartools': ['oocytes/blank.oo', 'config.ini', 'database/schema.sql']},
     entry_points={
         'console_scripts': [
             'vartools = vartools.cli:main',
