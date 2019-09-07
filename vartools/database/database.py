@@ -40,10 +40,12 @@ def executeScriptsFromFile(filename, con):
         try:
             c.execute(command)
         except Exception as err:
-            print("Command skipped: ", command, "because of: ", err)
+            pass
+            #print("Command skipped: ", command, "because of: ", err)
     return None
 
 def dbinitdef(dbpath):
+    print(dbpath)
     """ initialize an new sqlite database with the default schema """
     con = sqlite3.connect(dbpath)
     # get the path of the schema.sql file

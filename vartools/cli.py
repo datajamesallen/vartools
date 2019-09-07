@@ -47,13 +47,22 @@ from vartools.database.database import dbinitdef
 
 @click.command()
 @click.argument('name')
-def initdb(name):
+def init(name):
     """ initialize a sqlite database with default schema """
     dbpath = os.path.abspath(name)
-    print(dbpath)
     dbinitdef(dbpath)
-    link(dbpath)
     click.echo('Initialized the database: ' + name)
+    # need to get absolute path of where it is installed on the machine
+    configdir = os.path.join(BASEDIR, 'config.ini')
+    # open and parse the config file
+    data = open(configdir,'r+')
+    parser = RawConfigParser()
+    parser.readfp(data)
+    parser.set('database','path',dbpath)
+    data.truncate(0)
+    data.seek(0)
+    parser.write(data)
+    click.echo(dbpath_abs + ' linked to database')
 
 @click.command()
 @click.argument('name')
@@ -74,7 +83,7 @@ clinvar.add_command(update)
 
 db.add_command(link)
 db.add_command(show)
-db.add_command(initdb)
+db.add_command(init)
 db.add_command(clinvar)
 
 @click.group()
