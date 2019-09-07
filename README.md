@@ -1,12 +1,14 @@
 # vartools
 
-command line application for reducing repetitive variant analysis
+A command line application for reducing repetitive data analysis
+
+I created this to do a better job at organizing my data.
 
 
 # Installation
 
-I recommend using pip or similar
-Currently not on pypi, but can still be installed by going into this repository's root directory and running
+I recommend using pip or similar.
+This projects is currently not on pypi, but can still be installed by going into this repository's root directory and running
 
     $ pip3 install .
 

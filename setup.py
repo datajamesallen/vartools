@@ -3,7 +3,7 @@ command line application for reducing repetitive variant analysis
 """
 from setuptools import find_packages, setup
 
-dependencies = ['click']
+dependencies = ['click','openpyxl']
 
 setup(
     name='vartools',
@@ -19,7 +19,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=dependencies,
-    package_data = {'vartools': ['oocytes/blank.oo']},
+    package_data = {'vartools': ['oocytes/blank.oo', 'config.ini']},
     entry_points={
         'console_scripts': [
             'vartools = vartools.cli:main',

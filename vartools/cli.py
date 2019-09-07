@@ -8,13 +8,18 @@ from configparser import RawConfigParser
 def db():
     pass
 
+BASEDIR = os.path.dirname(__file__)
+
 @click.command()
 @click.argument('dbpath')
 def connect(dbpath):
     """ connects to the database at the given path, if it exits """
     dbpath_abs = os.path.abspath(dbpath)
     if os.path.isfile(dbpath_abs):
-        data = open('config.ini','r+')
+        # need to get absolute path of where it is installed on the machine
+        configdir = os.path.join(BASEDIR, 'config.ini')
+        # open and parse the config file
+        data = open(configdir,'r+')
         parser = RawConfigParser()
         parser.readfp(data)
         parser.set('database','path',dbpath_abs)
@@ -27,6 +32,8 @@ def connect(dbpath):
 
 def getdbpath():
     parser = RawConfigParser()
+    configdir = os.path.join(BASEDIR, 'config.ini')
+    print(configdir)
     parser.read('config.ini')
     return parser.get('database','path')
 
@@ -37,7 +44,7 @@ def show():
 @click.command()
 @click.argument('name')
 def initdb(name):
-    click.echo('Initialized the database')
+    click.echo('Initialized the database: ' + name)
 
 @click.command()
 @click.argument('name')
