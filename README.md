@@ -5,17 +5,30 @@ command line application for reducing repetitive variant analysis
 
 # Installation
 
-If you don't use `pipsi`, you're missing out.
-Here are [installation instructions](https://github.com/mitsuhiko/pipsi#readme).
+I recommend using pip or similar
+Currently not on pypi, but can still be installed by going into this repository's root directory and running
 
-Simply run:
+    $ pip3 install .
 
-    $ pipsi install .
+# Current Features
 
+configure the currently used database
 
-# Usage
+    $ vartools db connect [SQLITE DATABASE]
 
-To use it:
+show the currently used database
 
-    $ vartools --help
+    $ vartools db show
+
+prepare oocyte data files
+
+    $ vartools oo prepare [FILENAMES]
+
+# Planned Features
+
+	$ vartools db results datadump
+	$ vartools db results trend
+	$ vartools db results -v [Variant]
+	$ vartools db results -o [Variant]
+	$ vartools db upload -o [FILENAMES]
 
