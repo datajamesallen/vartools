@@ -49,8 +49,8 @@ from vartools.database.database import dbinitdef
 @click.argument('name')
 def init(name):
     """ initialize a sqlite database with default schema """
-    dbpath = os.path.abspath(name)
-    dbinitdef(dbpath)
+    dbpath_abs = os.path.abspath(name)
+    dbinitdef(dbpath_abs)
     click.echo('Initialized the database: ' + name)
     # need to get absolute path of where it is installed on the machine
     configdir = os.path.join(BASEDIR, 'config.ini')
@@ -58,7 +58,7 @@ def init(name):
     data = open(configdir,'r+')
     parser = RawConfigParser()
     parser.readfp(data)
-    parser.set('database','path',dbpath)
+    parser.set('database','path', dbpath_abs)
     data.truncate(0)
     data.seek(0)
     parser.write(data)
@@ -69,25 +69,19 @@ def init(name):
 def dropdb(name):
     click.echo('Dropped the database')
 
-@click.group()
-def clinvar():
-    pass
-
-from vartools.database.clinvar import clinvar_script
-
 @click.command()
-def update():
+def clinvar_update():
+from vartools.database.clinvar import clinvar_script
     clinvar_script()
-
-clinvar.add_command(update)
 
 db.add_command(link)
 db.add_command(show)
 db.add_command(init)
-db.add_command(clinvar)
+db.add_command(clinvar_update)
 
 @click.group()
 def oo():
+    """ oocyte related commands """
     pass
 
 from vartools.oocytes.prepare import convert_all
