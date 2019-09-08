@@ -69,9 +69,10 @@ def init(name):
 def dropdb(name):
     click.echo('Dropped the database')
 
+from vartools.database.clinvar import clinvar_script
+
 @click.command()
 def clinvar_update():
-from vartools.database.clinvar import clinvar_script
     clinvar_script()
 
 db.add_command(link)

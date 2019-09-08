@@ -15168,3 +15168,73 @@
 08262019 12:3031 PM,20,297,Already found, updating current info on variant: NM_007325.5(GRIA3):c.1891C>A (p.Arg631Ser)
 08262019 12:3031 PM,20,297,Already found, updating current info on variant: NM_007325.5(GRIA3):c.2497G>A (p.Gly833Arg)
 08262019 12:3031 PM,20,380,STATUS: COMPLETE
+09082019 08:5430 AM,20,19,Initializing
+09082019 08:5512 AM,20,19,Initializing
+09082019 08:5552 AM,20,19,Initializing
+09082019 08:5553 AM,20,279,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.1122+320G>A
+09082019 08:5554 AM,20,279,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.-18-345C>A
+09082019 08:5554 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.571-1141G>A
+09082019 08:5555 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.570+263G>C
+09082019 08:5556 AM,20,279,Protein consequence not found. Ignoring variant: NM_000834.4(GRIN2B):c.1780+19G>A
+09082019 08:5556 AM,20,279,Protein consequence not found. Ignoring variant: NM_000834.4(GRIN2B):c.-47G>T
+09082019 08:5557 AM,20,279,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.2356+13G>A
+09082019 08:5558 AM,20,279,Protein consequence not found. Ignoring variant: NM_000834.4(GRIN2B):c.2011-197T>C
+09082019 08:5558 AM,20,279,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.2357-247C>A
+09082019 08:5559 AM,20,279,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.1328+142A>T
+09082019 08:5559 AM,20,279,Protein consequence not found. Ignoring variant: NM_000834.4(GRIN2B):c.2359+224A>C
+09082019 08:5600 AM,20,279,Protein consequence not found. Ignoring variant: NM_000834.4(GRIN2B):c.2359+129A>G
+09082019 08:5601 AM,20,279,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.2595+152C>A
+09082019 08:5601 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.1340-38G>A
+09082019 08:5602 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.672-80A>G
+09082019 08:5603 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.672-106A>C
+09082019 08:5603 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.672-134A>G
+09082019 08:5604 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.394-139C>A
+09082019 08:5605 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.394-176_394-175insA
+09082019 08:5605 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.394-188_394-130del
+09082019 08:5606 AM,20,279,Protein consequence not found. Ignoring variant: NM_000834.4(GRIN2B):c.2172-176A>G
+09082019 08:5607 AM,20,279,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.1328+181C>A
+09082019 08:5607 AM,20,279,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.1123-177T>C
+09082019 08:5608 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.1468-219_1468-204del
+09082019 08:5608 AM,20,279,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.2457C>T (p.Gly819=)
+09082019 08:5609 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.1467+202T>C
+09082019 08:5610 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.1467+160G>A
+09082019 08:5610 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.258+235C>T
+09082019 08:5611 AM,20,279,Protein consequence not found. Ignoring variant: NM_000834.4(GRIN2B):c.3081C>A (p.Leu1027=)
+09082019 08:5612 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.2328C>T (p.Ile776=)
+09082019 08:5612 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.1806C>T (p.Thr602=)
+09082019 08:5613 AM,20,279,Protein consequence not found. Ignoring variant: NM_001083619.1(GRIA2):c.1845-8G>T
+09082019 08:5614 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.633G>A (p.Ala211=)
+09082019 08:5614 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.672-147C>T
+09082019 08:5615 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.672-148G>A
+09082019 08:5616 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.394-32A>G
+09082019 08:5616 AM,20,279,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.1122+200G>C
+09082019 08:5617 AM,20,279,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.1328+160T>C
+09082019 08:5618 AM,20,279,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.1122+133T>C
+09082019 08:5618 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.1467+182C>T
+09082019 08:5619 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.969-177G>A
+09082019 08:5620 AM,20,279,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.415-191C>G
+09082019 08:5620 AM,20,279,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.259-203G>A
+09082019 08:5621 AM,20,279,Protein consequence not found. Ignoring variant: NM_000834.4(GRIN2B):c.1500+47C>T
+09082019 09:0310 AM,20,23,Initializing
+09082019 09:0311 AM,20,283,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.1122+320G>A
+09082019 09:0312 AM,20,283,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.-18-345C>A
+09082019 09:0313 AM,20,283,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.571-1141G>A
+09082019 09:0314 AM,20,283,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.570+263G>C
+09082019 09:0316 AM,20,283,Protein consequence not found. Ignoring variant: NM_000834.4(GRIN2B):c.1780+19G>A
+09082019 09:0317 AM,20,283,Protein consequence not found. Ignoring variant: NM_000834.4(GRIN2B):c.-47G>T
+09082019 09:0317 AM,20,283,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.2356+13G>A
+09082019 09:0318 AM,20,283,Protein consequence not found. Ignoring variant: NM_000834.4(GRIN2B):c.2011-197T>C
+09082019 09:0319 AM,20,283,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.2357-247C>A
+09082019 09:0319 AM,20,283,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.1328+142A>T
+09082019 09:0333 AM,20,23,Initializing
+09082019 09:0335 AM,20,283,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.1122+320G>A
+09082019 09:0336 AM,20,283,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.-18-345C>A
+09082019 09:0336 AM,20,283,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.571-1141G>A
+09082019 09:0337 AM,20,283,Protein consequence not found. Ignoring variant: NM_007327.4(GRIN1):c.570+263G>C
+09082019 09:0338 AM,20,283,Protein consequence not found. Ignoring variant: NM_000834.4(GRIN2B):c.1780+19G>A
+09082019 09:0338 AM,20,283,Protein consequence not found. Ignoring variant: NM_000834.4(GRIN2B):c.-47G>T
+09082019 09:0339 AM,20,283,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.2356+13G>A
+09082019 09:0339 AM,20,283,Protein consequence not found. Ignoring variant: NM_000834.4(GRIN2B):c.2011-197T>C
+09082019 09:0340 AM,20,283,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.2357-247C>A
+09082019 09:0341 AM,20,283,Protein consequence not found. Ignoring variant: NM_001134407.3(GRIN2A):c.1328+142A>T
+09082019 09:0341 AM,20,283,Protein consequence not found. Ignoring variant: NM_000834.4(GRIN2B):c.2359+224A>C

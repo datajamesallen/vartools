@@ -12,30 +12,30 @@ import copy
 import logging
 from socket import timeout
 import progressbar as pb
+import os
+from configparser import RawConfigParser
 
-logging.basicConfig(format='%(asctime)s,%(levelno)s,%(lineno)s,%(message)s', datefmt='%m%d%Y %I:%M%S %p', filename="clinvar.log", level = logging.INFO)
-logger = logging.getLogger()
-
-logger.info('Initializing')
-
-now = datetime.datetime.now()
-
-# configuration #
-base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
-# you need to regester an account with NCBI in order to generate an API key
-# I am not sure how long these last, but this one has been working for a while.
-# If this script breaks in the future look into this - James
-apikey = '5b609e53520d9529fe22a5162b07bbeb3608'
-# constructing the genelist from farfunctions.py
-# (edit that file if you want to add genes)
-genelist = []
-for key in varfx.genedict:
-    genelist.append(key)
+def init_logger():
+    basedir = os.path.dirname(__file__)
+    logdir = os.path.join(basedir, 'clinvar.log')
+    print('writing log file to ' + logdir)
+    logging.basicConfig(format='%(asctime)s,%(levelno)s,%(lineno)s,%(message)s', datefmt='%m%d%Y %I:%M%S %p', filename=logdir, level = logging.INFO)
+    logger = logging.getLogger()
+    logger.info('Initializing')
+    now = datetime.datetime.now()
+    return logger
 
 # functions #
 
 def geturlbar(genelist):
     ''' for constructing the url bar, supply a list of genes '''
+    base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
+    # you need to regester an account with NCBI in order to generate an API key
+    # I am not sure how long these last, but this one has been working for a while.
+    # If this script breaks in the future look into this - James
+    apikey = '5b609e53520d9529fe22a5162b07bbeb3608'
+    # constructing the genelist from farfunctions.py
+    # (edit that file if you want to add genes)
     query = '&term='
     for key in genelist:
         query += key + '[gene]%20OR%20'
@@ -216,7 +216,9 @@ def tryconn(url):
         return(tryconn(url))
     return(result)
 
-def queryvar():
+def queryvar(genelist, logger):
+    base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
+    apikey = '5b609e53520d9529fe22a5162b07bbeb3608'
     url = geturlbar(genelist)
     try:
         result = urllib.request.urlopen(url, timeout = 30)
@@ -333,9 +335,15 @@ def queryvar():
     return(None)
 
 def dbcon():
-    """ opens a new sqlite database connection """
-    con = sqlite3.connect('../var.db')
+    """ opens sqlite database connection from config """
+    parser = RawConfigParser()
+    basedir = os.path.dirname(__file__)
+    configdir = os.path.join(basedir, '../config.ini')
+    parser.read(configdir)
+    dbpath = parser.get('database','path')
+    con = sqlite3.connect(dbpath)
     return(con)
+
 def dbupload(data, table, header):
     """ upload clinvar data to the database """
     con = dbcon()
@@ -362,11 +370,16 @@ hclinvar_obs_phen = ['clinvar_VariationID','clinvar_ObsID','clinvar_AffectedStat
             'clinvar_Phenotype','clinvar_PhenotypeID','clinvar_phenXRefDB','clinvar_phenXRefID']
 
 def clinvar_script():
+
     print("=====================================================")
     print("|  Clinvar Data Miner for Nonsynonymous Variants    |")
     print("|       Created by James Allen 2019 CFERV           |")
     print("-----------------------------------------------------")
+    logger = init_logger()
     print("Currently selected Gene list:")
+    genelist = []
+    for key in varfx.genedict:
+        genelist.append(key)
     counter = 0
     for item in genelist:
         if ((counter % 5) == 0 and counter != 0):
@@ -376,7 +389,7 @@ def clinvar_script():
     print("\n-----------------------------------------------------")
     time.sleep(1)
     print("Initializing Gene List Query")
-    queryvar()
+    queryvar(genelist, logger)
     logger.info("STATUS: COMPLETE")
     print("Program completed, all variants are now updated in the database")
     return(None)
