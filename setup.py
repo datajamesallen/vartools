@@ -3,7 +3,7 @@ command line application for reducing repetitive variant analysis
 """
 from setuptools import find_packages, setup
 
-dependencies = ['click','openpyxl','progressbar']
+dependencies = ['click','openpyxl','progressbar','hail']
 
 setup(
     name='vartools',
