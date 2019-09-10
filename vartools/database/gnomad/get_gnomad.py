@@ -3,8 +3,10 @@
 # this script requires gsutil
 
 from urllib.request import urlopen
+import requests
 import os
 import json
+
 
 def parse_transcript_list(transcript_list_file):
     """ 
@@ -23,14 +25,19 @@ def parse_transcript_list(transcript_list_file):
     transcript_dict = {}
     for transcript in transcript_list:
         url = ('https://grch37.rest.ensembl.org/lookup/id/' +
-                transcript + '?content-type=apllication/json')
-        response = urlopen(url)
-        response_body = response.read()
-        data = json.loads(response_body.decode("utf-8"))
+                transcript + '?content-type=application/json')
+        print(url)
+        response = requests.get(url)
+        data = response.json()
         chromosome = data["seq_region_name"]
-        locus_intervals = (chromosome + ":" + data["start"] + "-" + data["end"])
-        transcript_dict[chromosome] = (transcript, locus_intervals)
+        locus_intervals = (str(chromosome) + ":" + str(data["start"]) +
+                           "-" + str(data["end"]))
+        if chromosome not in transcript_dict:
+            transcript_dict[chromosome] = []
+        transcript_dict[chromosome].append((transcript, locus_intervals))
     return transcript_dict
+
+import progressbar as pb
 
 def get_gnomad_data(chrom, version, exomes = True):
     """
@@ -70,28 +77,30 @@ def get_gnomad_data(chrom, version, exomes = True):
 
 import hail as hl
 
-def process_gnomad_data(datapath, transcript_list):
+def process_gnomad_data(datapath, chromosome, transcript_list):
     """
     Uses hail to process the gnomAD dataset 
     """
     hl.init()
     # this try-except block makes sure the program won't spend time 
     # writing the table to disk if it already exists from a previous loop
-    try:
-        mt = hl.import_vcf(datapath).write('gnomad.exomes.r2.1.1.sites.9.mt', overwrite = False)
-    except:
+    #try:
+    #    mt = hl.import_vcf(datapath).write('temp_matrix_table_' + chromosome + '.mt',
+                                           overwrite = False)
+    #except:
         # it already exists, so just read it.
-        pass
-    mt = hl.read_matrix_table('gnomad.exomes.r2.1.1.sites.9.mt')
+    #    pass
+    #mt = hl.read_matrix_table('temp_matrix_table_' + chromosome + '.mt')
+    mt = hl.import_vcf(datapath)
     # first filter down to the right number of transcripts
     transcripts, intervals = zip(*transcript_list)
     mt = hl.filter_intervals(mt, [hl.parse_locus_interval(x,
                              reference_genome = 'GRCh37') for x in intervals]
                             )
     mt = mt.explode_rows(mt.info.vep)
-    # get the right transcript
+    # get the right tranhi oscript
     mt = mt.annotate_rows(vep = mt.info.vep.split('\|'))
-    mt = annotate_rows(enst = mt.vep[6])
+    mt = mt.annotate_rows(enst = mt.vep[6])
     mt = filter_rows(enst == transcript)
     mt = mt.annotate_rows(vartype = mt.vep[1].split('&'))
     mt = mt.explode_rows(mt.vartype)
@@ -115,16 +124,19 @@ def process_gnomad_data(datapath, transcript_list):
                         mt.info.non_topmed_AC, mt.info.non_topmed_AN,
                         mt.info.controls_AC, mt.info.controls_AN
                         ).make_table()
+    ht.export('gnomad_chr' + chromosome + '_processed.tsv')
+    os.remove('temp_matrix_table_' + chromosome + '.mt')
     hl.stop()
     return None
 
 def build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version):
     """ builds all gnomAD data from a given gene list file """
-    gene_dict = parse_transcript_list(transcript_list_file)
-    for chrom, transcript_list in transcript_dict:
+    transcript_dict = parse_transcript_list(transcript_list_file)
+    print(transcript_dict)
+    for chrom, transcript_list in transcript_dict.items():
         for a in [False, True]:
-            datapath = get_gnomad(chrom, version = gmd_version, exomes = a)
-            process_gnomad_data(datapath, transcript_list)
+            datapath = get_gnomad_data(chrom, version = gmd_version, exomes = a)
+            process_gnomad_data(datapath, chrom, transcript_list)
     return None
 
 if __name__ == "__main__":
