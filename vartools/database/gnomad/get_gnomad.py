@@ -4,15 +4,13 @@
 
 from urllib.request import urlopen
 import os
+import json
 
 def parse_transcript_list(transcript_list_file):
     """ 
-    Takes a transcript list file as an argument
-    this should be comma separated, and contain
-    3 columns: Chromosome, Gene, RefSeq
-
-    Returns a dictionary, with each chromosome
-    as a key, and a list of tuples (Gene, RefSeq)
+    Takes a file containing a line separated list of ensembl transcripts,
+    then returns a data structure containing the
+    gene name, chromosome, and locus start and end
     """
     if not os.path.isfile(transcript_list_file):
         print('Invalid File name')
@@ -21,23 +19,18 @@ def parse_transcript_list(transcript_list_file):
     with open(transcript_list_file, 'r') as f:
         r = f.readlines()
         for row in r:
-            rowlist = row.rstrip().split(',')
-            transcript_list.append(rowlist)
-    transcript_list = transcript_list[1:] # remove headers
-    # make into a dictionary, with each chrom as the key
-    # and a list of tuples (Gene, RefSeq) for each key
-    gene_dict = {}
-    chrom_list = []
-    for row in transcript_list:
-        chrom_list.append(row[0])
-    chrom_set = set(chrom_list)
-    for chrom in chrom_set:
-        gene_dict[chrom] = []
-        for row in transcript_list:
-            if row[0] == chrom:
-                gene_dict[chrom].append((row[1], row[2]))
-    print(gene_dict)
-    return gene_dict
+            transcript_list.append(row.rstrip())
+    transcript_dict = {}
+    for transcript in transcript_list:
+        url = ('https://grch37.rest.ensembl.org/lookup/id/' +
+                transcript + '?content-type=apllication/json')
+        response = urlopen(url)
+        response_body = response.read()
+        data = json.loads(response_body.decode("utf-8"))
+        chromosome = data["seq_region_name"]
+        locus_intervals = (chromosome + ":" + data["start"] + "-" + data["end"])
+        transcript_dict[chromosome] = (transcript, locus_intervals)
+    return transcript_dict
 
 def get_gnomad_data(chrom, version, exomes = True):
     """
@@ -52,7 +45,9 @@ def get_gnomad_data(chrom, version, exomes = True):
     else:
         gmd_subset = 'genomes'
     # fetch the correct vcf file to download for the chromosome
-    url = 'https://storage.googleapis.com/gnomad-public/release/' + versimo[moon + '/vcf/' + gmd_subset + '/gnomad.' + gmd_subset + '.r' + version + '.sites.' + chrom + '.vcf.bgz'
+    url = ('https://storage.googleapis.com/gnomad-public/release/' +
+           version + '/vcf/' + gmd_subset + '/gnomad.' + gmd_subset +
+           '.r' + version + '.sites.' + chrom + '.vcf.bgz')
     print(url)
 
     writepath = os.path.join(os.getcwd(), 'gnomad_' + version + '_chr' + chrom + '.vcf.bgz')
@@ -75,7 +70,7 @@ def get_gnomad_data(chrom, version, exomes = True):
 
 import hail as hl
 
-def process_gnomad_data(datapath, locus_intervals, transcript):
+def process_gnomad_data(datapath, transcript_list):
     """
     Uses hail to process the gnomAD dataset 
     """
@@ -89,22 +84,23 @@ def process_gnomad_data(datapath, locus_intervals, transcript):
         pass
     mt = hl.read_matrix_table('gnomad.exomes.r2.1.1.sites.9.mt')
     # first filter down to the right number of transcripts
+    transcripts, intervals = zip(*transcript_list)
     mt = hl.filter_intervals(mt, [hl.parse_locus_interval(x,
                              reference_genome = 'GRCh37') for x in intervals]
                             )
     mt = mt.explode_rows(mt.info.vep)
     # get the right transcript
     mt = mt.annotate_rows(vep = mt.info.vep.split('\|'))
-    mt = annotate_rows(enst = mt.vep[6]
+    mt = annotate_rows(enst = mt.vep[6])
     mt = filter_rows(enst == transcript)
-    mt = mt.annotate_rows(vartype = mt.vep[1].split('&')
+    mt = mt.annotate_rows(vartype = mt.vep[1].split('&'))
     mt = mt.explode_rows(mt.vartype)
     vartype_list = hl.literal(['frameshift_variant','inframe_deletion',
                                'inframe_insertion','missense_variant',
-                               'start_lost','stop_gained']
+                               'start_lost','stop_gained'])
     if synonymous:
         vartype_list = vartype_list + 'synonymous_variant'
-    mt = mt.filter_rows(vartype_list.contains(mt.vartype)
+    mt = mt.filter_rows(vartype_list.contains(mt.vartype))
     mt = mt.annotate_rows(aanum = mt.vep[14])
     mt = mt.annotate_rows(orig_aa = mt.vep[15].split('/')[0])
     mt = mt.annotate_rows(var_aa = mt.vep[15].split('/')[1])
@@ -122,10 +118,10 @@ def process_gnomad_data(datapath, locus_intervals, transcript):
     hl.stop()
     return None
 
-def build_AllGnomadFromGeneList(transcript_list_file, gmd_version):
+def build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version):
     """ builds all gnomAD data from a given gene list file """
     gene_dict = parse_transcript_list(transcript_list_file)
-    for chrom, transcript_list in gene_dict:
+    for chrom, transcript_list in transcript_dict:
         for a in [False, True]:
             datapath = get_gnomad(chrom, version = gmd_version, exomes = a)
             process_gnomad_data(datapath, transcript_list)
@@ -134,6 +130,4 @@ def build_AllGnomadFromGeneList(transcript_list_file, gmd_version):
 if __name__ == "__main__":
     gmd_version = '2.1.1'
     transcript_list_file = 'transcript_list.csv'
-    gene_dict = parse_transcript_list(transcript_list_file)
-    #writepath = get_gnomad(transcript_list, version = gmd_version, exomes = True)
-    #process_gnomad(transcript_list)
+    build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version)
