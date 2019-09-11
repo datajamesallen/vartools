@@ -6,7 +6,7 @@ from urllib.request import urlopen
 import requests
 import os
 import json
-
+import sys
 
 def parse_transcript_list(transcript_list_file):
     """ 
@@ -55,12 +55,13 @@ def get_gnomad_data(chrom, version, exomes = True):
     url = ('https://storage.googleapis.com/gnomad-public/release/' +
            version + '/vcf/' + gmd_subset + '/gnomad.' + gmd_subset +
            '.r' + version + '.sites.' + chrom + '.vcf.bgz')
-    print(url)
+    print("Downloading data from: ", url)
 
     writepath = os.path.join(os.getcwd(), 'gnomad_' + version + '_chr' + chrom + '.vcf.bgz')
 
     response = urlopen(url)
-
+    size = response.info()['Content-Length']
+    gigsize = round(int(size)/1000000000,1)
     # partition the result into chunks of data,
     # to that the program does not run out of memory
     # some files may be over 30 GigaBytes
@@ -73,6 +74,9 @@ def get_gnomad_data(chrom, version, exomes = True):
             if not chunk:
                 break
             f.write(chunk)
+            print(str(round(cumCHUNK/1000000000,1)) + '/' + str(gigsize), end='')
+            print('\r', end = '')
+    print("Download Complete")
     return writepath
 
 import hail as hl
@@ -86,7 +90,7 @@ def process_gnomad_data(datapath, chromosome, transcript_list):
     # writing the table to disk if it already exists from a previous loop
     #try:
     #    mt = hl.import_vcf(datapath).write('temp_matrix_table_' + chromosome + '.mt',
-                                           overwrite = False)
+    #                                       overwrite = False)
     #except:
         # it already exists, so just read it.
     #    pass
@@ -101,7 +105,7 @@ def process_gnomad_data(datapath, chromosome, transcript_list):
     # get the right tranhi oscript
     mt = mt.annotate_rows(vep = mt.info.vep.split('\|'))
     mt = mt.annotate_rows(enst = mt.vep[6])
-    mt = filter_rows(enst == transcript)
+    mt = mt.filter_rows(mt.enst == transcript)
     mt = mt.annotate_rows(vartype = mt.vep[1].split('&'))
     mt = mt.explode_rows(mt.vartype)
     vartype_list = hl.literal(['frameshift_variant','inframe_deletion',
