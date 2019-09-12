@@ -81,46 +81,59 @@ def get_gnomad_data(chrom, version, exomes = True):
 
 import hail as hl
 
-def process_gnomad_data(datapath, chromosome, transcript_list):
+def process_gnomad_data(datapath, chromosome, transcript_list, synonymous = True):
     """
     Uses hail to process the gnomAD dataset 
     """
     hl.init()
     # this try-except block makes sure the program won't spend time 
     # writing the table to disk if it already exists from a previous loop
-    #try:
-    #    mt = hl.import_vcf(datapath).write('temp_matrix_table_' + chromosome + '.mt',
-    #                                       overwrite = False)
-    #except:
-        # it already exists, so just read it.
-    #    pass
-    #mt = hl.read_matrix_table('temp_matrix_table_' + chromosome + '.mt')
-    mt = hl.import_vcf(datapath)
+    try:
+        mt = hl.import_vcf(datapath).write('temp_matrix_table_' + chromosome + '.mt',
+                                           overwrite = False)
+    except:
+        #it already exists, so just read it.
+        pass
+    mt = hl.read_matrix_table('temp_matrix_table_' + chromosome + '.mt')
+    #mt = hl.import_vcf(datapath)
     # first filter down to the right number of transcripts
     transcripts, intervals = zip(*transcript_list)
+    print(transcripts)
+    print(intervals)
+    transcripts = hl.literal(list(transcripts))
+    print(transcripts)
     mt = hl.filter_intervals(mt, [hl.parse_locus_interval(x,
                              reference_genome = 'GRCh37') for x in intervals]
                             )
+    mt.show(5)
     mt = mt.explode_rows(mt.info.vep)
     # get the right tranhi oscript
     mt = mt.annotate_rows(vep = mt.info.vep.split('\|'))
+    mt.vep.show(5)
     mt = mt.annotate_rows(enst = mt.vep[6])
-    mt = mt.filter_rows(mt.enst == transcript)
+    mt.enst.show(5)
+    mt = mt.filter_rows(transcripts.contains(mt.enst))
+    mt.vep.show(5)
     mt = mt.annotate_rows(vartype = mt.vep[1].split('&'))
+    mt.vartype.show(5)
     mt = mt.explode_rows(mt.vartype)
     vartype_list = hl.literal(['frameshift_variant','inframe_deletion',
                                'inframe_insertion','missense_variant',
                                'start_lost','stop_gained'])
     if synonymous:
-        vartype_list = vartype_list + 'synonymous_variant'
+        vartype_list = vartype_list.extend(['synonymous_variant'])
     mt = mt.filter_rows(vartype_list.contains(mt.vartype))
+    mt.show(5)
     mt = mt.annotate_rows(aanum = mt.vep[14])
+    mt.show(5)
     mt = mt.annotate_rows(orig_aa = mt.vep[15].split('/')[0])
     mt = mt.annotate_rows(var_aa = mt.vep[15].split('/')[1])
     mt = mt.annotate_rows(cDNA_conseq = mt.vep[10])
     mt = mt.annotate_rows(Protein_conseq = mt.vep[11])
+    mt.orig_aa.show(5)
+    mt.describe()
     ht = mt.select_rows(mt.info.variant_type, mt.qual, mt.filters,
-                        mt.enst, mt.vartypelist, mt.cDNA_conseq,
+                        mt.enst, mt.vartype, mt.cDNA_conseq,
                         mt.Protein_conseq, mt.orig_aa, mt.aanum,
                         mt.var_aa, mt.info.AC, mt.info.AN,
                         mt.info.non_neuro_AC, mt.info.non_neuro_AN,
@@ -128,7 +141,9 @@ def process_gnomad_data(datapath, chromosome, transcript_list):
                         mt.info.non_topmed_AC, mt.info.non_topmed_AN,
                         mt.info.controls_AC, mt.info.controls_AN
                         ).make_table()
-    ht.export('gnomad_chr' + chromosome + '_processed.tsv')
+    ht.show(5)
+    filename = 'gnomad_chr' + chromosome + '_processed.tsv'
+    #ht.export(filename)
     os.remove('temp_matrix_table_' + chromosome + '.mt')
     hl.stop()
     return None
@@ -139,7 +154,8 @@ def build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version):
     print(transcript_dict)
     for chrom, transcript_list in transcript_dict.items():
         for a in [False, True]:
-            datapath = get_gnomad_data(chrom, version = gmd_version, exomes = a)
+            #datapath = get_gnomad_data(chrom, version = gmd_version, exomes = a)
+            datapath = 'gnomad.exomes.r2.1.1.sites.9.vcf.bgz'
             process_gnomad_data(datapath, chrom, transcript_list)
     return None
 
