@@ -60,6 +60,10 @@ def get_gnomad_data(chrom, version, exomes = True):
     writepath = os.path.join(os.getcwd(), 'gnomad_' + version + '_chr' + chrom + '.vcf.bgz')
 
     response = urlopen(url)
+    try: 
+        response = urlopen(request)
+    except Exception:
+        print('url open failed')
     size = response.info()['Content-Length']
     gigsize = round(int(size)/1000000000,1)
     # partition the result into chunks of data,
@@ -85,7 +89,9 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
     """
     Uses hail to process the gnomAD dataset 
     """
-    hl.init()
+    basedir = os.path.dirname(__file__)
+    logdir = os.path.join(basedir, 'hail.log')
+    hl.init(log = logdir, append = True)
     # this try-except block makes sure the program won't spend time 
     # writing the table to disk if it already exists from a previous loop
     #try:
@@ -121,6 +127,10 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
     #mt.filter_rows(mt.vartype == "synonymous_variant").var_aa = None
     mt = mt.annotate_rows(transcript_consequence = mt.vep[10])
     mt = mt.annotate_rows(protein_consequence = mt.vep[11])
+    mt = mt.annotate_rows(AC = mt.info.AC[0])
+    mt = mt.annotate_rows(non_neuro_AC = mt.info.non_neuro_AC[0])
+    mt = mt.annotate_rows(non_topmed_AC = mt.info.non_topmed_AC[0])
+    mt = mt.annotate_rows(controls_AC = mt.info.controls_AC[0])
     ht = mt.select_rows(mt.qual,
                         mt.filters, mt.vartype,
                         mt.transcript_consequence, mt.protein_consequence,
@@ -129,10 +139,10 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
                         mt.info.ReadPosRankSum, mt.info.VQSLOD, mt.info.QD,
                         mt.info.DP, mt.info.BaseQRankSum, mt.info.MQ, mt.info.ClippingRankSum,
                         mt.info.rf_tp_probability, mt.info.pab_max,
-                        mt.info.AC, mt.info.AN,
-                        mt.info.non_neuro_AC, mt.info.non_neuro_AN,
-                        mt.info.non_topmed_AC, mt.info.non_topmed_AN,
-                        mt.info.controls_AC, mt.info.controls_AN
+                        mt.AC, mt.info.AN,
+                        mt.non_neuro_AC, mt.info.non_neuro_AN,
+                        mt.non_topmed_AC, mt.info.non_topmed_AN,
+                        mt.controls_AC, mt.info.controls_AN
                         ).make_table()
     """
     ht = mt.select_rows(mt.info.variant_type, mt.qual, mt.filters,
@@ -160,9 +170,10 @@ def build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version):
     print(transcript_dict)
     for chrom, transcript_list in transcript_dict.items():
         for a in [False, True]:
-            #datapath = get_gnomad_data(chrom, version = gmd_version, exomes = a)
-            datapath = 'gnomad_2.1.1_chr9.vcf.bgz'
+            datapath = get_gnomad_data(chrom, version = gmd_version, exomes = a)
+            #datapath = 'gnomad_2.1.1_chr9.vcf.bgz'
             process_gnomad_data(datapath, chrom, transcript_list, exomes = a)
+            os.remove(datapath)
     return None
 
 if __name__ == "__main__":
