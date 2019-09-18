@@ -60,10 +60,10 @@ def get_gnomad_data(chrom, version, exomes = True):
     writepath = os.path.join(os.getcwd(), 'gnomad_' + version + '_chr' + chrom + '.vcf.bgz')
 
     response = urlopen(url)
-    try: 
-        response = urlopen(request)
-    except Exception:
-        print('url open failed')
+    #try: 
+    #    response = urlopen(request)
+    #except Exception:
+    #    print('url open failed')
     size = response.info()['Content-Length']
     gigsize = round(int(size)/1000000000,1)
     # partition the result into chunks of data,
@@ -110,6 +110,8 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
     mt = mt.explode_rows(mt.info.vep)
     # get the right transcript
     mt = mt.annotate_rows(vep = mt.info.vep.split('\|'))
+    #print(mt.vep.take(1))
+    mt = mt.annotate_rows(gene = mt.vep[3])
     mt = mt.annotate_rows(enst = mt.vep[6])
     mt = mt.filter_rows(transcripts.contains(mt.enst))
     mt = mt.annotate_rows(vartype = mt.vep[1].split('&'))
@@ -120,7 +122,7 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
     if synonymous:
         vartype_list = vartype_list.extend(['synonymous_variant'])
     mt = mt.filter_rows(vartype_list.contains(mt.vartype))
-    mt = mt.annotate_rows(aa_num = mt.vep[14])
+    mt = mt.annotate_rows(codon_num = mt.vep[14])
     mt = mt.annotate_rows(aa_change = mt.vep[15])
     #mt = mt.annotate_rows(orig_aa = mt.vep[15].split('/')[0])
     #mt = mt.annotate_rows(var_aa = mt.vep[15].split('/')[1])
@@ -131,35 +133,42 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
     mt = mt.annotate_rows(non_neuro_AC = mt.info.non_neuro_AC[0])
     mt = mt.annotate_rows(non_topmed_AC = mt.info.non_topmed_AC[0])
     mt = mt.annotate_rows(controls_AC = mt.info.controls_AC[0])
+    mt = mt.annotate_rows(pab_max = mt.info.pab_max[0])
     ht = mt.select_rows(mt.qual,
-                        mt.filters, mt.vartype,
+                        mt.filters, mt.vartype, mt.gene,
                         mt.transcript_consequence, mt.protein_consequence,
-                        mt.aa_num, mt.aa_change,
+                        mt.codon_num, mt.aa_change,
                         mt.info.FS, mt.info.MQRankSum, mt.info.InbreedingCoeff,
                         mt.info.ReadPosRankSum, mt.info.VQSLOD, mt.info.QD,
                         mt.info.DP, mt.info.BaseQRankSum, mt.info.MQ, mt.info.ClippingRankSum,
-                        mt.info.rf_tp_probability, mt.info.pab_max,
+                        mt.info.rf_tp_probability, mt.pab_max,
                         mt.AC, mt.info.AN,
                         mt.non_neuro_AC, mt.info.non_neuro_AN,
                         mt.non_topmed_AC, mt.info.non_topmed_AN,
                         mt.controls_AC, mt.info.controls_AN
                         ).make_table()
-    """
-    ht = mt.select_rows(mt.info.variant_type, mt.qual, mt.filters,
-                        mt.enst, mt.vartype, mt.cDNA_conseq,
-                        mt.Protein_conseq, mt.orig_aa, mt.aanum,
-                        mt.var_aa, mt.info.AC, mt.info.AN,
-                        mt.info.non_neuro_AC, mt.info.non_neuro_AN,
-                        mt.info.non_topmed_AC, mt.info.non_topmed_AN,
-                        mt.info.controls_AC, mt.info.controls_AN
-                        ).make_table()
-    """
+
+    ht = ht.annotate(chromosome = ht.locus.contig, position = ht.locus.position)
+    ht = ht.annotate(allele_ref = ht.alleles[0], allele_alt = ht.alleles[1])
+    ht = ht.key_by(ht.chromosome, ht.position, ht.allele_ref, ht.allele_alt)
+    ht = ht.drop(ht.alleles, ht.locus)
+    df = ht.to_pandas()
+    cols = df.columns.tolist()
+    cols = cols[-4:] + cols[:-4]
+    df = df[cols]
+    df['filters'] = 'PASS'
+    df['ref_aa'], df['alt_aa'] = df['aa_change'].str.split('/',1).str
+    df.loc[df.vartype == 'synonymous_variant', 'protein_consequence'] = None
+    df = df.drop(['aa_change'], axis = 1)
+    cols = df.columns.tolist()
+    cols = cols[:11] + cols[-2:] + cols[11:-2]
+    df = df[cols]
     if exomes:
         ome = 'exomes'
     else:
         ome = 'genomes'
     filename = 'gnomad_' + ome + '_chr' + chromosome + '_processed.tsv'
-    ht.export(filename)
+    df.to_csv(filename, sep='\t', encoding = 'utf-8', index=False)
     #os.remove('temp_matrix_table_' + chromosome + '.mt')
     hl.stop()
     return None
@@ -169,9 +178,9 @@ def build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version):
     transcript_dict = parse_transcript_list(transcript_list_file)
     print(transcript_dict)
     for chrom, transcript_list in transcript_dict.items():
-        for a in [False, True]:
+        for a in [True, False]:
             datapath = get_gnomad_data(chrom, version = gmd_version, exomes = a)
-            #datapath = 'gnomad_2.1.1_chr9.vcf.bgz'
+            #datapath = 'gnomad_2.1.1_chr16.vcf.bgz'
             process_gnomad_data(datapath, chrom, transcript_list, exomes = a)
             os.remove(datapath)
     return None
