@@ -7,6 +7,7 @@ import requests
 import os
 import json
 import sys
+import pandas as pd
 
 def parse_transcript_list(transcript_list_file):
     """ 
@@ -153,6 +154,7 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
     ht = ht.key_by(ht.chromosome, ht.position, ht.allele_ref, ht.allele_alt)
     ht = ht.drop(ht.alleles, ht.locus)
     df = ht.to_pandas()
+    hl.stop()
     cols = df.columns.tolist()
     cols = cols[-4:] + cols[:-4]
     df = df[cols]
@@ -167,22 +169,30 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
         ome = 'exomes'
     else:
         ome = 'genomes'
-    filename = 'gnomad_' + ome + '_chr' + chromosome + '_processed.tsv'
-    df.to_csv(filename, sep='\t', encoding = 'utf-8', index=False)
+    df['source'] = ome
+    #filename = 'gnomad_' + ome + '_chr' + chromosome + '_processed.tsv'
+    #df.to_csv(filename, sep='\t', encoding = 'utf-8', index=False)
     #os.remove('temp_matrix_table_' + chromosome + '.mt')
-    hl.stop()
-    return None
+    return df
 
 def build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version):
     """ builds all gnomAD data from a given gene list file """
     transcript_dict = parse_transcript_list(transcript_list_file)
     print(transcript_dict)
     for chrom, transcript_list in transcript_dict.items():
-        for a in [True, False]:
-            datapath = get_gnomad_data(chrom, version = gmd_version, exomes = a)
-            #datapath = 'gnomad_2.1.1_chr16.vcf.bgz'
-            process_gnomad_data(datapath, chrom, transcript_list, exomes = a)
-            os.remove(datapath)
+        exomes_data = get_gnomad_data(chrom, version = gmd_version,
+                                      exomes = True)
+        exomes_df = process_gnomad_data(exomes_data, chrom,
+                                        transcript_list, exomes = True)
+        os.remove(exomes_data)
+        genomes_data = get_gnomad_data(chrom, version = gmd_version,
+                                       exomes = False)
+        genomes_df = process_gnomad_data(genomes_data, chrom,
+                                         transcript_list, exomes = False)
+        os.remove(genomes_data)
+        combined_df = pd.concat([exomes_df, genomes_df]).drop_duplicates(['chromosome','position','allele_ref','allele_alt']).reset_index(drop=True)
+        filename = 'chr' + chrom + '_processed.tsv'
+        combined_df.to_csv(filename, sep='\t', encoding = 'utf-8', index=False)
     return None
 
 if __name__ == "__main__":
