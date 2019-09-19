@@ -75,6 +75,19 @@ from vartools.database.clinvar import clinvar_script
 def clinvar_update():
     clinvar_script()
 
+from vartools.database.gnomad import build_gnomAD_FromTranscriptList
+
+@click.command()
+@click.argument('transcript_list')
+@click.argument('version', default='2.1.1')
+def gnomad_update(transcript_list_file, version):
+    """
+    updates the database with gnomad variants
+    for a given list of ENST transcripts in a line
+    separated file
+    """
+    build_gnomAD_FromTranscriptList(transcript_list_file, version)
+
 db.add_command(link)
 db.add_command(show)
 db.add_command(init)
