@@ -49,7 +49,10 @@ def dbinitdef(dbpath):
     """ initialize an new sqlite database with the default schema """
     con = sqlite3.connect(dbpath)
     # get the path of the schema.sql file
-    schemadir = os.path.join(BASEDIR, 'schema.sql')
-    executeScriptsFromFile(schemadir, con)
+    tabledir = os.path.join(BASEDIR, 'tables')
+    tables = os.listdir(tabledir)
+    for table in tables:
+        table_fulldir = os.path.join(tabledir, table)
+        executeScriptsFromFile(table_fulldir, con)
     return None
 

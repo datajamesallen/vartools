@@ -78,7 +78,7 @@ def clinvar_update():
 from vartools.database.gnomad import build_gnomAD_FromTranscriptList
 
 @click.command()
-@click.argument('transcript_list')
+@click.argument('transcript_list_file')
 @click.argument('version', default='2.1.1')
 def gnomad_update(transcript_list_file, version):
     """
@@ -92,6 +92,7 @@ db.add_command(link)
 db.add_command(show)
 db.add_command(init)
 db.add_command(clinvar_update)
+db.add_command(gnomad_update)
 
 @click.group()
 def oo():

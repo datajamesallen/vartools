@@ -8,6 +8,18 @@ import os
 import json
 import sys
 import pandas as pd
+import sqlite3
+from configparser import RawConfigParser
+
+def dbcon():
+    """ opens sqlite database connection from config """
+    parser = RawConfigParser()
+    basedir = os.path.dirname(__file__)
+    configdir = os.path.join(basedir, '../config.ini')
+    parser.read(configdir)
+    dbpath = parser.get('database','path')
+    con = sqlite3.connect(dbpath)
+    return(con)
 
 def parse_transcript_list(transcript_list_file):
     """ 
@@ -197,7 +209,11 @@ def build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version):
         combined_df = combined_df.drop_duplicates(['chromosome','position','allele_ref','allele_alt']).reset_index(drop=True)
         combined_df = combined_df.sort_values(by=['position'])
         filename = 'chr' + chrom + '_processed.tsv'
-        combined_df.to_csv(filename, sep='\t', encoding = 'utf-8', index=False)
+        #combined_df.to_csv(filename, sep='\t', encoding = 'utf-8', index=False)
+        con = dbcon()
+        combined_df.to_sql('gnomad', con = con, if_exists = "append", index = False)
+        con.commit()
+        con.close()
     return None
 
 if __name__ == "__main__":
