@@ -18,9 +18,9 @@ if platform.system == 'Darwin':
     libdir = 'vartools/oocytes/lib/macos'
 
 module1 = Extension('myModule',
-                    include_dirs = ['vartools/oocytes/include/'],
+                    include_dirs = ['include'],
                     libraries = ['levmar'],
-                    library_dirs = ['vartools/oocytes/lib/linux'],
+                    library_dirs = ['lib/linux'],
                     sources = ['vartools/oocytes/test.c'])
 
 setup(
