@@ -17,11 +17,11 @@ if platform.system == 'Linux':
 if platform.system == 'Darwin':
     libdir = 'vartools/oocytes/lib/macos'
 
-module1 = Extension('myModule',
+module1 = Extension('_oofit',
                     include_dirs = ['include'],
-                    libraries = ['levmar'],
-                    library_dirs = ['lib/linux'],
-                    sources = ['vartools/oocytes/test.c'])
+                    libraries = ['levmar','lapack','blas','m'],
+                    library_dirs = ['lib/macos'],
+                    sources = ['vartools/oocytes/oofit.c', 'vartools/oocytes/oofit_wrap.c'])
 
 setup(
     name='vartools',
@@ -47,9 +47,9 @@ setup(
     classifiers=[
         # As from http://pypi.python.org/pypi?%3Aaction=list_classifiers
         # 'Development Status :: 1 - Planning',
-        # 'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 2 - Pre-Alpha',
         # 'Development Status :: 3 - Alpha',
-        'Development Status :: 4 - Beta',
+        # 'Development Status :: 4 - Beta',
         # 'Development Status :: 5 - Production/Stable',
         # 'Development Status :: 6 - Mature',
         # 'Development Status :: 7 - Inactive',

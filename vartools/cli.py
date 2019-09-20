@@ -2,11 +2,11 @@ import click
 import os
 import sqlite3
 from configparser import RawConfigParser
-import myModule
+from oofit import fit1d
 
 @click.command()
 def helloworld():
-    myModule.helloworld()
+    fit1d()
     return None
 
 @click.group()
