@@ -2,6 +2,12 @@ import click
 import os
 import sqlite3
 from configparser import RawConfigParser
+import myModule
+
+@click.command()
+def helloworld():
+    myModule.helloworld()
+    return None
 
 @click.group()
 #@click.argument('test')
@@ -130,6 +136,7 @@ def master():
 
 master.add_command(db)
 master.add_command(oo)
+master.add_command(helloworld)
 
 def main():
     master()

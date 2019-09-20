@@ -2,8 +2,26 @@
 command line application for reducing repetitive variant analysis
 """
 from setuptools import find_packages, setup
+from distutils.core import Extension
+import platform
 
 dependencies = ['click','openpyxl','progressbar','hail']
+
+operating_system = platform.system()
+
+print(platform.system)
+libdir = ''
+
+if platform.system == 'Linux':
+    libdir = 'vartools/oocytes/lib/linux'
+if platform.system == 'Darwin':
+    libdir = 'vartools/oocytes/lib/macos'
+
+module1 = Extension('myModule',
+                    include_dirs = ['vartools/oocytes/include/'],
+                    libraries = ['levmar'],
+                    library_dirs = ['vartools/oocytes/lib/linux'],
+                    sources = ['vartools/oocytes/test.c'])
 
 setup(
     name='vartools',
@@ -19,6 +37,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=dependencies,
+    ext_modules = [module1],
     package_data = {'vartools': ['oocytes/blank.oo', 'config.ini', 'database/tables/*']},
     entry_points={
         'console_scripts': [

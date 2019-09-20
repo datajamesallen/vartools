@@ -29,7 +29,7 @@ def xl2list(xlfile):
     expnonelist = [None] * 10
     exprow = ''
     fits = [None] * 6
-    prefix = ['OOCYTE']
+    #prefix = [""]
     # end starting values
     wb = xl.load_workbook(xlfile)
     ws = wb['DataEntry']
@@ -53,16 +53,16 @@ def xl2list(xlfile):
     dlist = []
     if len(explist) == 1:
         for row in oolist:
-            newrow = prefix + row + fits + explist[0]
+            newrow = row + fits + explist[0]
             dlist.append(newrow)
     elif len(explist) == len(oolist):
         for i in range(0, len(oolist)):
-            newrow = prefix + oolist[i] + fits + explist[i]
+            newrow = oolist[i] + fits + explist[i]
             dlist.append(newrow)
     else:
         explist = explist[0]
         for row in oolist:
-            newrow = prefix + row + fits + explist
+            newrow = row + fits + explist
             dlist.append(newrow)
     return(dlist)
 
@@ -71,7 +71,7 @@ def writeoofile(dlist, header, xlfile, outdir):
     with open(header, 'r') as hfile:
         header = hfile.readlines()
     hfile.close()
-    oofile = dlist[0][1]
+    oofile = dlist[0][0]
     p = re.compile(".+-.+-.+-.+-")
     res = p.findall(oofile)
     ph = re.compile("p[hH]")
