@@ -2,11 +2,11 @@ import click
 import os
 import sqlite3
 from configparser import RawConfigParser
-from oofit import fit1d
+import _oofit
 
 @click.command()
 def helloworld():
-    fit1d()
+    _oofit.fit1([-5.52,-5.00],[50,20],2,0,100,[30])
     return None
 
 @click.group()

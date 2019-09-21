@@ -20,7 +20,8 @@ if platform.system == 'Darwin':
 module1 = Extension('_oofit',
                     include_dirs = ['include'],
                     libraries = ['levmar','lapack','blas','m'],
-                    library_dirs = ['lib/macos'],
+                    library_dirs = ['lib/linux'],
+                    extra_compile_args = ["-fPIC"],
                     sources = ['vartools/oocytes/oofit.c', 'vartools/oocytes/oofit_wrap.c'])
 
 setup(
