@@ -9,21 +9,6 @@ dependencies = ['click','openpyxl','progressbar','hail']
 
 operating_system = platform.system()
 
-print(platform.system)
-libdir = ''
-
-if platform.system == 'Linux':
-    libdir = 'vartools/oocytes/lib/linux'
-if platform.system == 'Darwin':
-    libdir = 'vartools/oocytes/lib/macos'
-
-module1 = Extension('_oofit',
-                    include_dirs = ['include'],
-                    libraries = ['levmar','lapack','blas','m'],
-                    library_dirs = ['lib/linux'],
-                    extra_compile_args = ["-fPIC"],
-                    sources = ['vartools/oocytes/oofit.c', 'vartools/oocytes/oofit_wrap.c'])
-
 setup(
     name='vartools',
     version='0.1.0',
@@ -38,7 +23,6 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=dependencies,
-    ext_modules = [module1],
     package_data = {'vartools': ['oocytes/blank.oo', 'config.ini', 'database/tables/*']},
     entry_points={
         'console_scripts': [

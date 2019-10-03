@@ -2,12 +2,6 @@ import click
 import os
 import sqlite3
 from configparser import RawConfigParser
-import _oofit
-
-@click.command()
-def helloworld():
-    _oofit.fit1([-5.52,-5.00],[50,20],2,0,100,[30])
-    return None
 
 @click.group()
 #@click.argument('test')
@@ -136,7 +130,6 @@ def master():
 
 master.add_command(db)
 master.add_command(oo)
-master.add_command(helloworld)
 
 def main():
     master()
