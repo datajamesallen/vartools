@@ -15,6 +15,13 @@ def dbcon():
     con = sqlite3.connect(dbpath)
     return con
 
+def oocytes_upload(filename):
+    """
+    upload an oocytes file to the database
+    """
+    return None
+
+
 def executeScriptsFromFile(filename, con):
     """
     executes all sql commands from a file,
