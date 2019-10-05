@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 This script creates a timestamped database backup,
 and cleans backups older than a set number of dates

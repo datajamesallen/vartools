@@ -3,22 +3,24 @@
 # this script requires gsutil
 
 from urllib.request import urlopen
-import requests
-import os
-import json
-import sys
-import pandas as pd
-import sqlite3
+from requests import get as requests_get
+from os.path import dirname
+from os.path import isfile
+from os.path import join as path_join
+from os import getcwd
+from sqlite3 import connect as sqlite3_connect
+#import json
 from configparser import RawConfigParser
+import progressbar as pb
 
 def dbcon():
     """ opens sqlite database connection from config """
     parser = RawConfigParser()
-    basedir = os.path.dirname(__file__)
-    configdir = os.path.join(basedir, '../config.ini')
+    basedir = dirname(__file__)
+    configdir = path_join(basedir, '../config.ini')
     parser.read(configdir)
     dbpath = parser.get('database','path')
-    con = sqlite3.connect(dbpath)
+    con = sqlite3_connect(dbpath)
     return(con)
 
 def parse_transcript_list(transcript_list_file):
@@ -40,7 +42,7 @@ def parse_transcript_list(transcript_list_file):
         url = ('https://grch37.rest.ensembl.org/lookup/id/' +
                 transcript + '?content-type=application/json')
         print(url)
-        response = requests.get(url)
+        response = requests_get(url)
         data = response.json()
         chromosome = data["seq_region_name"]
         locus_intervals = (str(chromosome) + ":" + str(data["start"]) +
@@ -49,8 +51,6 @@ def parse_transcript_list(transcript_list_file):
             transcript_dict[chromosome] = []
         transcript_dict[chromosome].append((transcript, locus_intervals))
     return transcript_dict
-
-import progressbar as pb
 
 def get_gnomad_data(chrom, version, exomes = True):
     """
@@ -70,7 +70,7 @@ def get_gnomad_data(chrom, version, exomes = True):
            '.r' + version + '.sites.' + chrom + '.vcf.bgz')
     print("Downloading data from: ", url)
 
-    writepath = os.path.join(os.getcwd(), 'gnomad_' + version + '_chr' + chrom + '.vcf.bgz')
+    writepath = path_join(getcwd(), 'gnomad_' + version + '_chr' + chrom + '.vcf.bgz')
 
     response = urlopen(url)
     #try: 
@@ -96,15 +96,21 @@ def get_gnomad_data(chrom, version, exomes = True):
     print("Download Complete")
     return writepath
 
-import hail as hl
+from hail import init
+from hail import stop
+from hail import import_vcf
+from hail import literal as hl_literal
+from hail import filter_intervals
+from hail import parse_locus_interval
+from pandas import concat as pd_concat
 
 def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, synonymous = True):
     """
     Uses hail to process the gnomAD dataset 
     """
-    basedir = os.path.dirname(__file__)
-    logdir = os.path.join(basedir, 'hail.log')
-    hl.init(log = logdir, append = True)
+    basedir = dirname(__file__)
+    logdir = path_join(basedir, 'hail.log')
+    init(log = logdir, append = True)
     # this try-except block makes sure the program won't spend time 
     # writing the table to disk if it already exists from a previous loop
     #try:
@@ -112,11 +118,11 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
     #except:
     #    #it already exists, so just read it.
     #    pass
-    mt = hl.import_vcf(datapath)
+    mt = import_vcf(datapath)
     # first filter down to the right number of transcripts
     transcripts, intervals = zip(*transcript_list)
-    transcripts = hl.literal(list(transcripts))
-    mt = hl.filter_intervals(mt, [hl.parse_locus_interval(x,
+    transcripts = hl_literal(list(transcripts))
+    mt = filter_intervals(mt, [parse_locus_interval(x,
                              reference_genome = 'GRCh37') for x in intervals]
                             )
     mt = mt.filter_rows(mt.filters == hl.empty_set('str'))
@@ -204,7 +210,7 @@ def build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version):
         os.remove(genomes_data)
         # combine the gnomad exomes data and the gnomad genomes data into one
         # pandas dataframe, and export it to the database
-        combined_df = pd.concat([exomes_df, genomes_df])
+        combined_df = pd_concat([exomes_df, genomes_df])
         combined_df.loc[combined_df.duplicated(subset=['chromosome','position','allele_ref','allele_alt'],keep=False), 'source'] = 'both'
         combined_df = combined_df.drop_duplicates(['chromosome','position','allele_ref','allele_alt']).reset_index(drop=True)
         combined_df = combined_df.sort_values(by=['position'])
