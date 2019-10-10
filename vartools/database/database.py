@@ -16,6 +16,7 @@ def dbcon():
     con = sqlite3.connect(dbpath)
     return con
 
+<<<<<<< HEAD
 def dbupload(datalist):
     """ takes the initial data from the datalist, parses and uploads to the database """
     # print(datalist)
@@ -133,6 +134,15 @@ def upload_oocyte_dailyrec(filename):
         dbupload(datalist[1:])
     return None
 
+=======
+def oocytes_upload(filename):
+    """
+    upload an oocytes file to the database
+    """
+    return None
+
+
+>>>>>>> 3f8758f5f41cfac1a635addea7545c6238366e7b
 def executeScriptsFromFile(filename, con):
     """
     executes all sql commands from a file,

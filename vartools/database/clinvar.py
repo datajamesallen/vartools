@@ -1,28 +1,30 @@
 import urllib.request
 import xml.etree.ElementTree as ET
-import json
-import xml
-import datetime
-import time
+from json import dumps as json_dumps
+#import xml
+from time import sleep
+from time import time
 from vartools.database import varfx
 from vartools.database import xmlfx
-import sys
-import sqlite3
-import copy
-import logging
+from sys import exit as sys_exit
+from sqlite3 import connect as sqlite3_connect
+from copy import deepcopy
+from logging import basicConfig
+from logging import getLogger
+from logging import INFO
 from socket import timeout
 import progressbar as pb
-import os
+from os.path import join as path_join
+from os.path import dirname
 from configparser import RawConfigParser
 
 def init_logger():
-    basedir = os.path.dirname(__file__)
-    logdir = os.path.join(basedir, 'clinvar.log')
+    basedir = dirname(__file__)
+    logdir = path_join(basedir, 'clinvar.log')
     print('writing log file to ' + logdir)
-    logging.basicConfig(format='%(asctime)s,%(levelno)s,%(lineno)s,%(message)s', datefmt='%m%d%Y %I:%M%S %p', filename=logdir, level = logging.INFO)
-    logger = logging.getLogger()
+    basicConfig(format='%(asctime)s,%(levelno)s,%(lineno)s,%(message)s', datefmt='%m%d%Y %I:%M%S %p', filename=logdir, level = INFO)
+    logger = getLogger()
     logger.info('Initializing')
-    now = datetime.datetime.now()
     return logger
 
 # functions #
@@ -65,7 +67,7 @@ def rmcom(stringi):
     return(new)
 
 def nestedd(data, l):
-    temp = copy.deepcopy(data)
+    temp = deepcopy(data)
     try:
         for k in l: temp = temp[k]
         return(temp)
@@ -73,7 +75,7 @@ def nestedd(data, l):
         return(None)
 
 def jprint(parsed):
-    print(json.dumps(parsed, indent=2, sort_keys=True))
+    print(json_dumps(parsed, indent=2, sort_keys=True))
     return(None)
 
 def xl(l):
@@ -216,6 +218,12 @@ def tryconn(url):
         return(tryconn(url))
     return(result)
 
+from progressbar import ProgressBar
+from progressbar import Percentage
+from progressbar import Bar
+from progressbar import RotatingMarker
+from progressbar import ETA
+
 def queryvar(genelist, logger):
     base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
     apikey = '5b609e53520d9529fe22a5162b07bbeb3608'
@@ -225,26 +233,26 @@ def queryvar(genelist, logger):
     except timeout:
         logger.error("SOCKET TIME OUT: took longer than 30 seconds to make Gene List query")
         print("took longer than 30 seconds to make initial query")
-        sys.exit()
+        sys_exit()
     print("Gene List Query complete. Initiating Variation Report Queries")
     iddict = xml2dict(result)
     idlist = list(map(str, iddict['IdList']['Id']))
     # length of ids list that can now determine how many iterations the loop will occur
     idslen = len(list(idlist))
-    widgets = ['Querying Variant Information: ', pb.Percentage(), ' ', pb.Bar(marker=pb.RotatingMarker()), ' ', pb.ETA()]
-    timer = pb.ProgressBar(widgets=widgets, maxval = idslen).start()
+    widgets = ['Querying Variant Information: ', Percentage(), ' ', Bar(marker=RotatingMarker()), ' ', ETA()]
+    timer = ProgressBar(widgets=widgets, maxval = idslen).start()
     global personid
     personid = 1 # this is a unique id that is generated every time this clinvar query is run
     limit = 600
-    starttime = time.time()
+    starttime = time()
     for index, id in enumerate(idlist):
         timer.update(index)
         # limit the number of requests to 10 per second
         if not index + 1 % limit:
-            sleeptime = starttime + 60 - time.time()
+            sleeptime = starttime + 60 - time()
             if sleeptime > 0:
-                time.sleep(sleeptime)
-            starttime = time.time()
+                sleep(sleeptime)
+            starttime = time()
         query = '&id=' + id + '&rettype=variation&retmax=10000&api_key=' + apikey
         url = base + 'efetch' + '.fcgi?db=' + 'clinvar' + query
         result = tryconn(url) 
@@ -337,11 +345,11 @@ def queryvar(genelist, logger):
 def dbcon():
     """ opens sqlite database connection from config """
     parser = RawConfigParser()
-    basedir = os.path.dirname(__file__)
-    configdir = os.path.join(basedir, '../config.ini')
+    basedir = dirname(__file__)
+    configdir = path_join(basedir, '../config.ini')
     parser.read(configdir)
     dbpath = parser.get('database','path')
-    con = sqlite3.connect(dbpath)
+    con = sqlite3_connect(dbpath)
     return(con)
 
 def dbupload(data, table, header):
@@ -353,7 +361,7 @@ def dbupload(data, table, header):
     query = "REPLACE INTO " + table + " (" + headerlist + ") VALUES (" + varquest + ")"
     cursor.execute(query, data)
     con.commit()
-    con.close
+    con.close()
     return(None)
 
 
@@ -387,7 +395,7 @@ def clinvar_script():
         print(item + ", ", end = "")
         counter += 1
     print("\n-----------------------------------------------------")
-    time.sleep(1)
+    sleep(1)
     print("Initializing Gene List Query")
     queryvar(genelist, logger)
     logger.info("STATUS: COMPLETE")
