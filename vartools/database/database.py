@@ -1,4 +1,5 @@
 import os
+import sys
 import sqlite3
 from configparser import RawConfigParser
 
@@ -14,6 +15,123 @@ def dbcon():
     dbpath = parser.get('database','path')
     con = sqlite3.connect(dbpath)
     return con
+
+def dbupload(datalist):
+    """ takes the initial data from the datalist, parses and uploads to the database """
+    # print(datalist)
+    # first convert data into the proper data type so that SQLite knows how to deal with it
+    newdatalist = []
+    for row in datalist:
+        intro = row[:3]
+        dat = row[3:24]
+        info = row[24:26]
+        fit = row[26:32]
+        assay = row[32]
+        try:
+            date_rec = datetime.datetime.strptime(row[33],'%Y-%m-%d')
+        except:
+            try:
+                date_rec = datetime.datetime.strptime(row[33], '%d/%m/%y')
+            except:
+                date_rec = None
+        try:
+            date_inj = datetime.datetime.strptime(row[34],'%Y-%m-%d')
+        except:
+            try:
+                date_inj = datetime.datetime.strptime(row[34], '%d/%m/%y')
+            except:
+                date_inj = None
+        volt = row[35]
+        last = row[36:]
+        newdat = []
+        for item in dat:
+            if item == None:
+                newdat.append(item)
+            else:
+                newdat.append(float(item))
+        newfit = []
+        for item in fit:
+            if item == None:
+                newfit.append(item)
+            else:
+                newfit.append(float(item))
+        newrow = intro + newdat + info + newfit + [assay] + [date_rec] + [date_inj] + [volt] + last
+        newdatalist.append(newrow)
+    # next find what constructs are in the file
+    # figure out which ones are WT and which are Variant
+    varlist = []
+    wtlist = []
+    for row in newdatalist:
+        # check if the construct is wildtype
+        if row[1] in glun1wt and row[2] in glun2wt:
+            wtlist.append((row[1], row[2]))
+        else:
+            varlist.append((row[1],row[2]))
+    varset = set(varlist)
+    # this will be the list of variants by individual subunit
+    variants = []
+    for Variant in varset:
+        if Variant[0] not in glun1wt:
+            variants.append(Variant[0])
+        if Variant[1] not in glun2wt:
+            variants.append(Variant[1])
+    wtset = set(wtlist)
+    print(assay, " : ", varset)
+    # for each variant, give it it's corresponding wild type pair
+    # each file / experiment should be broken up by variant/wildtype pairings
+    wtdata = []
+    remaining = []
+    for Variant in variants:
+        for row in newdatalist:
+            # check if the construct is wildtype
+            if row[1] in glun1wt and row[2] in glun2wt:
+                wtdata.append([Variant] + row + [now])
+            else:
+                remaining.append(row)
+    vardata = []
+    for row in remaining:
+        if row[1] in glun1wt and row[2] in glun2wt:
+            continue
+        else:
+            if row[1] in glun1wt:
+                Variant = row[2]
+            elif row[2] in glun2wt:
+                Variant = row[1]
+            else:
+                sys.exit("could not figure out variant")
+            vardata.append([Variant] + row + [now])
+    con = dbcon()
+    c = con.cursor()
+    rowlen = 44
+    varexstring = "REPLACE INTO varoocytes values (" + ("?," * rowlen)[:-1] + ")"
+    wtexstring = "REPLACE INTO wtoocytes values (" + ("?," * rowlen)[:-1] + ")"
+    for row in wtdata:
+        #print(row)
+        c.execute(wtexstring, row)
+    for row in vardata:
+        #print(row)
+        c.execute(varexstring, row)
+    # execute code here to wait before commiting to the database.
+    con.commit()
+    con.close()
+    return None
+
+def upload_oocyte_dailyrec(filename):
+    """
+    uploads the oocyte daily recording file to the database
+    """
+    ext = filename[-3:]
+    if ext not in ("csv"):
+        sys.exit("invlaid filetype")
+    with open(filename) as f:
+        data = f.readlines()
+        datalist = []
+        for row in data:
+            rowlist = row.rstrip().split(",")
+            datarow = [None if item == '' or item == '\n' else item for item in datarow]
+            datalist.append(datarow)
+        dbupload(datalist[1:])
+    return None
 
 def executeScriptsFromFile(filename, con):
     """
