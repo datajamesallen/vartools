@@ -6,9 +6,9 @@ main function:
 
 """
 
-import openpyxl as xl
+from openpyxl import load_workbook
 import datetime
-import string
+from string import ascii_uppercase
 import re
 
 # my oocyte fitting project
@@ -34,11 +34,11 @@ def xl2list(xlfile):
     exprow = ''
     #prefix = [""]
     # end starting values
-    wb = xl.load_workbook(xlfile)
+    wb = load_workbook(xlfile)
     ws = wb['DataEntry']
     i = start
     # the column names of the oocyte data happends to be uppercase letters A-Z
-    oocols = string.ascii_uppercase
+    oocols = ascii_uppercase
     oolist = []
     # continue to read data until the last row is blank
     fitlist = []
@@ -118,7 +118,7 @@ def writeoofile(dlist, header, xlfile, outdir):
                 elif isinstance(value, datetime.datetime):
                     newval = value.strftime("%Y-%m-%d")
                 else:
-                    newval = value
+                    newval = value.replace(",",";")
                 newrow.append(newval)
             newdlist.append(newrow)
             opfile.write(",".join(newrow) + "\n")

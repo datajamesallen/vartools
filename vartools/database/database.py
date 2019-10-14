@@ -1,6 +1,7 @@
 import os
 import sys
 import sqlite3
+import datetime
 from configparser import RawConfigParser
 
 BASEDIR = os.path.dirname(__file__)
@@ -8,7 +9,7 @@ BASEDIR = os.path.dirname(__file__)
 def dbcon():
     """ returns the sqlite database connection object from the database
     that is currently 'linked' in the config.ini file """
-    configdir = os.path.join(BASEDIR, 'config.ini')
+    configdir = os.path.join(BASEDIR, os.pardir, 'config.ini')
     data = open(configdir, 'r+')
     parser = RawConfigParser()
     parser.read(configdir)
@@ -16,13 +17,18 @@ def dbcon():
     con = sqlite3.connect(dbpath)
     return con
 
-<<<<<<< HEAD
 def dbupload(datalist):
-    """ takes the initial data from the datalist, parses and uploads to the database """
+    """
+    takes the initial data from the datalist, parses and uploads to the database
+    """
+    glun1wt = ["h1a-WT","r1a-WT"]
+    glun2wt = ["r2A-WT","r2B-WT","r2C-WT","r2D-WT","h2A-WT","h2B-WT","h2C-WT","h2D-WT"]
+    now = datetime.datetime.now()
     # print(datalist)
     # first convert data into the proper data type so that SQLite knows how to deal with it
     newdatalist = []
     for row in datalist:
+        print(row)
         intro = row[:3]
         dat = row[3:24]
         info = row[24:26]
@@ -128,21 +134,32 @@ def upload_oocyte_dailyrec(filename):
         data = f.readlines()
         datalist = []
         for row in data:
+            print(row)
             rowlist = row.rstrip().split(",")
-            datarow = [None if item == '' or item == '\n' else item for item in datarow]
+            datarow = [None if item == '' or item == '\n' else item for item in rowlist]
             datalist.append(datarow)
         dbupload(datalist[1:])
     return None
 
-=======
+def oocytes_upload_all(filenames):
+    for filename in filenames:
+        upload_oocyte_dailyrec(filename)
+    return None
+
 def oocytes_upload(filename):
     """
     upload an oocytes file to the database
     """
+    with open(filename) as f:
+        ret = f.readlines()
+    oolist = []
+    for row in ret:
+        row = row.rstrip().split(",")
+        print(row)
+        oolist.append(row)
+    con = dbcon()
     return None
 
-
->>>>>>> 3f8758f5f41cfac1a635addea7545c6238366e7b
 def executeScriptsFromFile(filename, con):
     """
     executes all sql commands from a file,

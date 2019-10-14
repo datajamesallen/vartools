@@ -68,6 +68,28 @@ def init(name):
     parser.write(data)
     click.echo(dbpath_abs + ' linked to database')
 
+from vartools.database.database import oocytes_upload_all
+
+@click.command()
+@click.argument('files', nargs = -1)
+def oocytes_upload(files):
+    """ uploads as many files """
+    abs_files = []
+    for f in files:
+        abs_f = abspath(f)
+        if not path_exists(abs_f):
+            print('Invalid path name supplied')
+            raise SystemExit
+        if not isfile(abs_f):
+            continue
+        abs_files.append(abs_f)
+        print(abs_f)
+    if len(abs_files) == 0:
+        print('Invalid path name supplied')
+    oocytes_upload_all(abs_files)
+    return None
+
+
 @click.command()
 @click.argument('name')
 def dropdb(name):
@@ -97,6 +119,7 @@ db.add_command(show)
 db.add_command(init)
 db.add_command(clinvar_update)
 db.add_command(gnomad_update)
+db.add_command(oocytes_upload)
 
 @click.group()
 def oo():
@@ -122,8 +145,8 @@ def prepare(files, directory):
         print(abs_f)
     if len(abs_files) == 0:
         print('Invalid path name supplied')
-    dirname = dirname(__file__)
-    header_abs = path_join(dirname, 'oocytes/blank.oo')
+    install_dir = dirname(__file__)
+    header_abs = path_join(install_dir, 'oocytes/blank.oo')
     convert_all(abs_files, header = header_abs, outdir = directory)
 
 oo.add_command(prepare)
