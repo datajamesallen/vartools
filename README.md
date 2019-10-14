@@ -16,7 +16,12 @@ This projects is currently not on pypi, but can still be installed by going into
 
 configure the currently used database
 
-    $ vartools db connect [SQLITE DATABASE]
+	$ vartools db init [NEW SQLITE DATABASE NAME] # create a new database with default tables and links it
+    $ vartools db link [EXISTING SQLITE DATABASE] # link an already created database
+	$ vartools db show                            # shows currently linked database
+	$ vartools db oocytes-upload [FILENAMES]      # upload prepared oocyte data to the linked database
+	$ vartools db clinvar-update                  # updates clinvar based on a list of genes
+	$ vartools db gnomad-update                   # updates gnomad based on a list of genes
 
 show the currently used database
 
@@ -32,5 +37,4 @@ prepare oocyte data files
 	$ vartools db results trend
 	$ vartools db results -v [Variant]
 	$ vartools db results -o [Variant]
-	$ vartools db upload -o [FILENAMES]
 
