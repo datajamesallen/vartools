@@ -116,6 +116,23 @@ def gnomad_update(transcript_list_file, version):
     """
     build_gnomAD_FromTranscriptList(transcript_list_file, version)
 
+@click.group()
+def result():
+    """ database results functions """
+    pass
+
+from vartools.database.result import download_variant_assay
+
+@click.command()
+@click.argument('variant')
+@click.argument('assay')
+def oo_download(variant, assay):
+    download_variant_assay(variant, assay)
+    return None
+
+result.add_command(oo_download)
+
+db.add_command(result)
 db.add_command(link)
 db.add_command(show)
 db.add_command(init)

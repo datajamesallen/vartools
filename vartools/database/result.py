@@ -1,4 +1,5 @@
 import pandas
+import os
 from pandasql import sqldf
 import matplotlib.pyplot as plot
 import numpy as np
@@ -9,10 +10,20 @@ from scipy.optimize import curve_fit
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy import stats
 from statistics import stdev
+from configparser import RawConfigParser
+
+BASEDIR = os.path.dirname(__file__)
 
 def dbcon():
-    con = sqlite3.connect('W390.db')
-    return(con)
+    """ returns the sqlite database connection object from the database
+    that is currently 'linked' in the config.ini file """
+    configdir = os.path.join(BASEDIR, os.pardir, 'config.ini')
+    data = open(configdir, 'r+')
+    parser = RawConfigParser()
+    parser.read(configdir)
+    dbpath = parser.get('database','path')
+    con = sqlite3.connect(dbpath)
+    return con
 
 def touM(logres):
     return (10**logres) * 1000000
@@ -43,6 +54,12 @@ def getdbdata(Variant, assay):
     rows = cursor.fetchall()
     df = pandas.DataFrame(rows, columns = names)
     return(df)
+
+def download_variant_assay(Variant, assay):
+    df = getdbdata(Variant, assay)
+    name = Variant + "_" + assay + ".csv"
+    df.to_csv(name, sep=',',index=False)
+    return None
 
 def openoo(filename):
     df = pandas.read_csv(filename, skiprows = [1], error_bad_lines=False, sep = ",")
