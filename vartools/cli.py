@@ -72,8 +72,11 @@ from vartools.database.database import oocytes_upload_all
 
 @click.command()
 @click.argument('files', nargs = -1)
-def oocytes_upload(files):
-    """ uploads as many files """
+@click.option('-f','--force','force', default = False)
+def oo_upload(files, force):
+    """
+    uploads prepared oocyte .csv files to the linked database
+    """
     abs_files = []
     for f in files:
         abs_f = abspath(f)
@@ -83,10 +86,9 @@ def oocytes_upload(files):
         if not isfile(abs_f):
             continue
         abs_files.append(abs_f)
-        print(abs_f)
     if len(abs_files) == 0:
         print('Invalid path name supplied')
-    oocytes_upload_all(abs_files)
+    oocytes_upload_all(abs_files, force)
     return None
 
 
@@ -119,7 +121,7 @@ db.add_command(show)
 db.add_command(init)
 db.add_command(clinvar_update)
 db.add_command(gnomad_update)
-db.add_command(oocytes_upload)
+db.add_command(oo_upload)
 
 @click.group()
 def oo():
@@ -142,7 +144,6 @@ def prepare(files, directory):
         if not isfile(abs_f):
             continue
         abs_files.append(abs_f)
-        print(abs_f)
     if len(abs_files) == 0:
         print('Invalid path name supplied')
     install_dir = dirname(__file__)

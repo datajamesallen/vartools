@@ -17,18 +17,17 @@ def dbcon():
     con = sqlite3.connect(dbpath)
     return con
 
-def dbupload(datalist):
+def dbupload(datalist, force):
     """
     takes the initial data from the datalist, parses and uploads to the database
     """
     glun1wt = ["h1a-WT","r1a-WT"]
     glun2wt = ["r2A-WT","r2B-WT","r2C-WT","r2D-WT","h2A-WT","h2B-WT","h2C-WT","h2D-WT"]
     now = datetime.datetime.now()
-    # print(datalist)
     # first convert data into the proper data type so that SQLite knows how to deal with it
     newdatalist = []
     for row in datalist:
-        print(row)
+        #print(row)
         intro = row[:3]
         dat = row[3:24]
         info = row[24:26]
@@ -83,7 +82,7 @@ def dbupload(datalist):
         if Variant[1] not in glun2wt:
             variants.append(Variant[1])
     wtset = set(wtlist)
-    print(assay, " : ", varset)
+    #print(assay, " : ", varset)
     # for each variant, give it it's corresponding wild type pair
     # each file / experiment should be broken up by variant/wildtype pairings
     wtdata = []
@@ -112,52 +111,56 @@ def dbupload(datalist):
     rowlen = 44
     varexstring = "REPLACE INTO varoocytes values (" + ("?," * rowlen)[:-1] + ")"
     wtexstring = "REPLACE INTO wtoocytes values (" + ("?," * rowlen)[:-1] + ")"
+    n_wt_rows = 0
     for row in wtdata:
         #print(row)
         c.execute(wtexstring, row)
+        n_wt_rows += c.rowcount
+    n_var_rows = 0
     for row in vardata:
         #print(row)
         c.execute(varexstring, row)
+        n_var_rows += c.rowcount
     # execute code here to wait before commiting to the database.
-    con.commit()
-    con.close()
+    if force:
+        con.commit()
+        con.close()
+    else:
+        print("The following changes will be made:")
+        print("Adding/replacing " + str(n_wt_rows) + " rows of WT data")
+        print(assay + " : " + str(wtset))
+        print("Adding/replacing " + str(n_var_rows) + " rows of Variant data")
+        print(assay + " : " + str(varset))
+        response = input("Make these changes? y/n (Enter=yes)")
+        if response == "" or response == "y":
+            con.commit()
+            con.close()
+        else:
+            con.rollback()
+            con.close()
     return None
 
-def upload_oocyte_dailyrec(filename):
+def upload_oocyte_dailyrec(filename, force):
     """
     uploads the oocyte daily recording file to the database
     """
-    ext = filename[-3:]
-    if ext not in ("csv"):
-        sys.exit("invlaid filetype")
+    print("Gathering data from " + filename)
     with open(filename) as f:
         data = f.readlines()
         datalist = []
         for row in data:
-            print(row)
             rowlist = row.rstrip().split(",")
             datarow = [None if item == '' or item == '\n' else item for item in rowlist]
             datalist.append(datarow)
-        dbupload(datalist[1:])
+        dbupload(datalist[1:], force)
     return None
 
-def oocytes_upload_all(filenames):
+def oocytes_upload_all(filenames, force):
     for filename in filenames:
-        upload_oocyte_dailyrec(filename)
-    return None
-
-def oocytes_upload(filename):
-    """
-    upload an oocytes file to the database
-    """
-    with open(filename) as f:
-        ret = f.readlines()
-    oolist = []
-    for row in ret:
-        row = row.rstrip().split(",")
-        print(row)
-        oolist.append(row)
-    con = dbcon()
+        ext = filename[-3:]
+        if ext not in ("csv"):
+            continue
+        upload_oocyte_dailyrec(filename, force)
     return None
 
 def executeScriptsFromFile(filename, con):

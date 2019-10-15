@@ -10,6 +10,8 @@ from openpyxl import load_workbook
 import datetime
 from string import ascii_uppercase
 import re
+from os.path import splitext as path_splitext
+from sys import exit as sys_exit
 
 # my oocyte fitting project
 from pydrc import fit4pdrc as fit
@@ -25,7 +27,6 @@ def xl2list(xlfile):
     """
     creates a list of values for each row in the oocyte data file
     """
-    print('testing')
     # starting values
     start = 3
     oononelist = [None] * 26
@@ -49,8 +50,9 @@ def xl2list(xlfile):
             continue
         # lets fit the data
         data = oorow[5:-2]
-        print(data)
-        doses = [-10,-9.52,-9,-8.52,-8,-7.52,-7,-6.52,-6,-5.52,-5,-4.52,-4,-3.52,-3,-2.52,-2,-1.52,-1]
+        #print(data)
+        doses = [-10,-9.52,-9,-8.52,-8,-7.52,-7,-6.52,-6,-5.52,
+                 -5,-4.52,-4,-3.52,-3,-2.52,-2,-1.52,-1]
         fit_data = []
         fit_dose = []
         for n, value in enumerate(data):
@@ -58,7 +60,7 @@ def xl2list(xlfile):
                 fit_data.append(value)
                 fit_dose.append(doses[n])
         ret = fit(fit_dose, fit_data)
-        print(ret)
+        #print(ret)
         fits = [ret['c'],ret['h'],ret['b'],ret['t'],ret['p'],ret['i']]
         fitlist.append(fits)
         oolist.append(oorow)
@@ -89,7 +91,9 @@ def xl2list(xlfile):
     return(dlist)
 
 def writeoofile(dlist, header, xlfile, outdir):
-    """ writes a .csv file in the specified format """
+    """
+    writes a .csv file in the specified format
+    """
     with open(header, 'r') as hfile:
         header = hfile.readlines()
     hfile.close()
@@ -123,16 +127,23 @@ def writeoofile(dlist, header, xlfile, outdir):
             newdlist.append(newrow)
             opfile.write(",".join(newrow) + "\n")
     opfile.close()
-    print(oofile + ' written to disk')
     return(None)
 
 def ooconv(xlfile, header, outdir):
-    """ converts a single excel file into .csv files in the specified outdir """
+    """
+    converts a single excel file into .csv files in the specified outdir
+    """
     dlist = xl2list(xlfile)
     writeoofile(dlist, header, xlfile, outdir)
+    print("csv file sucessfully written to disk")
     return(None)
 
 def convert_all(filelist, header, outdir):
     """ converts a list of excel files into .csv files in the specified outdir """
     for xlfile in filelist:
+        print(xlfile)
+        pre, ext = path_splitext(xlfile)
+        if ext not in (".xlsx",".xls"):
+            print("invlaid filetype: " + ext)
+            continue
         ooconv(xlfile, header, outdir)
