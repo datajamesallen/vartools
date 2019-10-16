@@ -6,7 +6,6 @@ import numpy as np
 import sqlite3
 import math
 import sys
-import re
 from scipy.optimize import curve_fit
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy import stats
@@ -27,13 +26,10 @@ def dbcon():
     con = sqlite3.connect(dbpath)
     return con
 
-def to_M(logres, base = -6):
-    """
-    converts to molar with the given base
-    """
-    return (10**logres) * (10**(-base))
+def touM(logres):
+    return (10**logres) * 1000000
 
-def multi_getdbdata(Varlist, assay):
+def getmultivar(Varlist, assay):
     con = dbcon()
     cursor = con.cursor()
     fullrows = []
@@ -65,6 +61,40 @@ def download_variant_assay(Variant, assay):
     name = Variant + "_" + assay + ".csv"
     df.to_csv(name, sep=',',index=False)
     return None
+
+def openoo(filename):
+    df = pandas.read_csv(filename, skiprows = [1], error_bad_lines=False, sep = ",")
+    return(df)
+
+def example():
+    n = 200
+    ngroup = 3
+    df = pandas.DataFrame({'data': np.random.rand(n), 'group': list(map(np.floor, np.random.rand(n) * ngroup))})
+
+    print(df)
+
+    group = 'group'
+    column = 'data'
+    grouped = df.groupby(group)
+
+    names = []
+    vals = []
+    xs = []
+
+    for i, (name, subdf) in enumerate(grouped):
+        names.append(name)
+        vals.append(subdf[column].tolist())
+        xs.append(np.random.normal(i+1, 0.04, subdf.shape[0]))
+
+    plot.boxplot(vals, labels=names)
+    ngroup = len(vals)
+    clevels = np.linspace(0., 1., ngroup)
+    for x, val, clevel in zip(xs, vals, clevels):
+        plot.scatter(x, val, c=clevel, alpha=0.4)
+    plot.show()
+    return(None)
+
+import re
 
 def getaa(variant):
     result = re.findall(r'\d+', variant)
@@ -362,7 +392,6 @@ def calcfoldshift(EC50_A, EC50_B):
     else:
         fs = EC50_B/EC50_A
     return fs
-
 def welch_ttest(mean_A, sd_A, n_A, mean_B, sd_B, n_B):
     s_delta = ((sd_A**2/n_A)+(sd_B**2/n_B))
     t = (mean_A - mean_B) / np.sqrt(s_delta)
@@ -487,9 +516,12 @@ def makeallpub():
             #plot.savefig("dir/figures/" + variant + "-" + assay + ".png", dpi = 300)
             #plot.close(fig)
 
-def create_folder_system():
-    """
-    This command will generate an updated version of the data contained in the database
-    in an organized file system format filled with csv files, png images, pdf's etc
-    """
+
+if __name__ == "__main__":
+    make_all_curve()
+    table_results(assay = 'znDRC', parameter = 'logec50')
+    prem4sat(fromlist = False)
+
+
+
 
