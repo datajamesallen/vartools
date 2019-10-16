@@ -130,6 +130,16 @@ def oo_download(variant, assay):
     download_variant_assay(variant, assay)
     return None
 
+from vartools.database.result import download_pub_variant_assay
+
+@click.command()
+@click.argument('variant')
+@click.argument('assay')
+def pub_download(variant, assay):
+    download_pub_variant_assay(variant, assay)
+    return None
+
+result.add_command(pub_download)
 result.add_command(oo_download)
 
 db.add_command(result)

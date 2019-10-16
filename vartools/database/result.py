@@ -11,6 +11,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from scipy import stats
 from statistics import stdev
 from configparser import RawConfigParser
+from pydrc import fit4pdrc
 
 BASEDIR = os.path.dirname(__file__)
 
@@ -203,6 +204,12 @@ def meanplot(df, parameter = "logec50"):
     return(fig)
 
 
+def download_pub_variant_assay(Variant, assay):
+    df = getdbdata(Variant, assay)
+    fig = makepub(df)
+    plot.savefig(Variant + '_' + assay + '.png')
+    return None
+
 def makepub(df):
     """
     GOAL: make a publication-ready figure of the data fed to this function
@@ -218,18 +225,6 @@ def makepub(df):
     # find the mean of each of the parameters in the fit function
     # these may not be used as they end up producing a rather ugly graph
     # default to showing the fits
-    fit = True
-    try:
-        logec50_mean = df.groupby(['glun1','glun2'])['logec50'].mean()
-    except:
-        fit = False
-    # if not, then plot just the datapoints
-    if fit:
-        logec50_stdev = df.groupby(['glun1','glun2'])['logec50'].std()
-        logec50_count = df.groupby(['glun1','glun2'])['logec50'].count()
-        hillslope_mean = df.groupby(['glun1','glun2'])['hillslope'].mean()
-        ymin_mean = df.groupby(['glun1','glun2'])['ymin'].mean()
-        ymax_mean = df.groupby(['glun1','glun2'])['ymax'].mean()
     # create different titles / descriptions based on the assay from the df
     acode = df['assay'][0]
     if acode == "gluDRC":
@@ -278,32 +273,24 @@ def makepub(df):
         semlist = []
         for v in range(0,len(sdlist)):
             semlist.append(sdlist[v]/math.sqrt(countlist[v]))
-        if fit:
-            c = logec50_mean[i]
-            rc = round(c, 2)
-            h = hillslope_mean[i]
-            b = ymin_mean[i]
-            t = ymax_mean[i]
-            drcfunc = drcfunc4
-            bound = ([0, 0, -np.inf, -np.inf],[np.inf ,np.inf, np.inf, np.inf])
-            initialval = [t, b, c, h]
-            try:
-                popt, popv = curve_fit(drcfunc, xlist, meanlist, initialval, bounds = bound)
-            except:
-                print("FITTING ERROR")
-                ax.scatter(xlist, meanlist, color = clr)
-                plot.errorbar(xlist, meanlist, color = clr, yerr = sdlist, linestyle="None")
-                continue
+        
+        ret = fit4pdrc(xlist, meanlist)
+        b = ret['b']
+        t = ret['t']
+        h = ret['h']
+        c = ret['c']
+        if ret['p'] == -1:
+            fit = False
+        else:
+            fit = True
         minx = min(xlist) # use for adjusting size of window
         maxx = max(xlist)
         x = np.linspace(minx-1.53,maxx+1.53,num = 100)
-        if fit:
-            y = [drcfunc(i, *popt) for i in x]
-        #y = eval('(b+((t-b)/(1+10**((c-x)*h))))')
         #ax.annotate("EC50: %s" %rc, xy=(rc, mid))
         ax.scatter(xlist, meanlist, color = clr)
         plot.errorbar(xlist, meanlist, color = clr, yerr = sdlist, linestyle="None")
         if fit:
+            y = eval('(b+((t-b)/(1+10**((c-x)*h))))')
             ax.plot(x,y, color = clr, label = iglun1 + '/' + iglun2)
     plot.legend()
     return(fig)
