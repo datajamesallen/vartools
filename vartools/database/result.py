@@ -498,6 +498,17 @@ def get_assays(Variant):
         assaylist.append(str(row[0]))
     return assaylist
 
+def get_dates():
+    con = dbcon()
+    cursor = con.cursor()
+    query = "select distinct(date_rec) from varoocytes"
+    cursor.execute(query)
+    datelist = []
+    for row in cursor:
+        print(row)
+        datelist.append(row.strftime('%m%d%Y'))
+    return datelist
+
 def create_folder_system():
     """
     This command will generate an updated version of the data contained in the database
@@ -511,9 +522,12 @@ def create_folder_system():
     if response != "y":
         sys.exit()
     varlist = getvariants()
+    vardir = os.path.join(cwd, 'by_variant')
+    if not os.path.exists(vardir):
+        os.makedirs(vardir)
     for variant in varlist:
         # create a folder for each variant
-        var_path = os.path.join(cwd, variant)
+        var_path = os.path.join(vardir, variant)
         if not os.path.exists(var_path):
             os.makedirs(var_path)
         assaylist = get_assays(variant)
@@ -526,6 +540,14 @@ def create_folder_system():
             if assay not in ("pH"):
                 download_pub_variant_assay(variant, assay)
             download_variant_assay(variant, assay)
+    datedir = os.path.join(cwd, 'by_date')
+    datelist = get_dates()
+    if not os.path.exists(datedir):
+        os.makedirs(datedir)
+    for date in datelist:
+        date_path = os.path.join(datedir, date)
+        if not os.path.exists(date_path):
+            os.makedirs(date_path)
     print("file structure created")
     return None
         
