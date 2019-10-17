@@ -62,6 +62,12 @@ def xl2list(xlfile):
         ret = fit(fit_dose, fit_data)
         #print(ret)
         fits = [ret['c'],ret['h'],ret['b'],ret['t'],ret['p'],ret['i']]
+        # below adds the fits back into the workbook
+        ws['AO'+str(i)].value = round(ret['b'],2)
+        ws['AP'+str(i)].value = round(ret['t'],2)
+        ws['AQ'+str(i)].value = round(ret['c'],2)
+        ws['AR'+str(i)].value = round(ret['h'],2)
+        ws['AS'+str(i)].value = 10**round(ret['c'],2)
         fitlist.append(fits)
         oolist.append(oorow)
         i += 1
@@ -88,6 +94,7 @@ def xl2list(xlfile):
         for i,row in enumerate(oolist):
             newrow = row + fitlist[i] + explist
             dlist.append(newrow)
+    wb.save(xlfile)
     return(dlist)
 
 def writeoofile(dlist, header, xlfile, outdir):

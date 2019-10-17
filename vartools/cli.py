@@ -139,6 +139,14 @@ def pub_download(variant, assay):
     download_pub_variant_assay(variant, assay)
     return None
 
+from vartools.database.result import create_folder_system
+
+@click.command()
+def folder_system():
+    create_folder_system()
+    return None
+
+result.add_command(folder_system)
 result.add_command(pub_download)
 result.add_command(oo_download)
 
@@ -159,8 +167,8 @@ from vartools.oocytes.prepare import convert_all
 
 @click.command()
 @click.argument('files', nargs = -1)
-@click.option('--directory', default=getcwd())
-def prepare(files, directory):
+@click.option('-o','--output', 'output', default=getcwd())
+def prepare(files, output):
     """ convert an excel file to the oocytes format """
     abs_files = []
     for f in files:
@@ -175,7 +183,7 @@ def prepare(files, directory):
         print('Invalid path name supplied')
     install_dir = dirname(__file__)
     header_abs = path_join(install_dir, 'oocytes/blank.oo')
-    convert_all(abs_files, header = header_abs, outdir = directory)
+    convert_all(abs_files, header = header_abs, outdir = output)
 
 oo.add_command(prepare)
 

@@ -7,6 +7,7 @@ import sqlite3
 import math
 import sys
 import re
+import datetime
 from scipy.optimize import curve_fit
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy import stats
@@ -178,6 +179,7 @@ def download_pub_variant_assay(Variant, assay):
     df = getdbdata(Variant, assay)
     fig = makepub(df)
     plot.savefig(Variant + '_' + assay + '.png')
+    plot.close(fig)
     return None
 
 def makepub(df):
@@ -209,6 +211,8 @@ def makepub(df):
     elif acode == "znDRC":
         aname = "log[Zinc] M"
         title = "Zinc Dose Inhibition Curve"
+    else:
+        sys.exit("Unexpected assay: " + acode)
     # set up the plots
     fig, ax = plot.subplots()
     plot.ylabel("% max reponse")
@@ -243,7 +247,6 @@ def makepub(df):
         semlist = []
         for v in range(0,len(sdlist)):
             semlist.append(sdlist[v]/math.sqrt(countlist[v]))
-        
         ret = fit4pdrc(xlist, meanlist)
         b = ret['b']
         t = ret['t']
@@ -395,8 +398,6 @@ def table_results(assay = 'gluDRC', parameter = 'logec50'):
     print(len(joined))
     return None
 
-import datetime
-
 def prem4sat(fromlist = True):
     if fromlist:
         with open('pm4list.csv','r') as f:
@@ -487,9 +488,45 @@ def makeallpub():
             #plot.savefig("dir/figures/" + variant + "-" + assay + ".png", dpi = 300)
             #plot.close(fig)
 
+def get_assays(Variant):
+    con = dbcon()
+    cursor = con.cursor()
+    query = "select distinct(assay) from varoocytes where Variant = '" + Variant + "'"
+    cursor.execute(query)
+    assaylist = []
+    for row in cursor:
+        assaylist.append(str(row[0]))
+    return assaylist
+
 def create_folder_system():
     """
     This command will generate an updated version of the data contained in the database
     in an organized file system format filled with csv files, png images, pdf's etc
     """
+    cwd = os.getcwd()
+    print("Current directory: " + cwd)
+    print("Create a database filysystem from the linked database in this directory?")
+    print("WARNING: if you have files here with the same name, they will be overwritten")
+    response = input("Proceed? (y/n)")
+    if response != "y":
+        sys.exit()
+    varlist = getvariants()
+    for variant in varlist:
+        # create a folder for each variant
+        var_path = os.path.join(cwd, variant)
+        if not os.path.exists(var_path):
+            os.makedirs(var_path)
+        assaylist = get_assays(variant)
+        for assay in assaylist:
+            # create a folder for each assay
+            var_assay_path = os.path.join(var_path, assay)
+            if not os.path.exists(var_assay_path):
+                os.makedirs(var_assay_path)
+            os.chdir(var_assay_path)
+            if assay not in ("pH"):
+                download_pub_variant_assay(variant, assay)
+            download_variant_assay(variant, assay)
+    print("file structure created")
+    return None
+        
 

@@ -239,6 +239,9 @@ def makepub(df):
     elif acode == "znDRC":
         aname = "log[Zinc] M"
         title = "Zinc Dose Inhibition Curve"
+    else:
+        print("Unexpected assay: " + acode)
+        sys.exit()
     # set up the plots
     fig, ax = plot.subplots()
     plot.ylabel("% max reponse")
