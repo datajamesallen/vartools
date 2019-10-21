@@ -14,6 +14,7 @@ from scipy import stats
 from statistics import stdev
 from configparser import RawConfigParser
 from pydrc import fit4pdrc
+from itertools import cycle
 
 BASEDIR = os.path.dirname(__file__)
 
@@ -223,6 +224,8 @@ def makepub(df):
     doses = [-10,-9.5228,-9,-8.5228,-8,-7.5228,-7,-6.5228,-6,-5.5228,-5,-4.5228,-4,-3.5228,-3,-2.5228,-2,-1.5228,-1]
     # a list of colors to iterate through
     color=list(plot.cm.Set1(np.linspace(0,1,len(groups))))
+    marker_list = ('o','v','s','+','D','.',',','^','<','>','1','2','3','4','p','*','h','H','x','d','|','_')
+    marker = cycle(marker_list)
     for i in range(0,len(groups)):
         clr = color[i]
         # find the glun1 and glun2 of this iteration, and then grab the appropriate data from that iteration
@@ -260,12 +263,12 @@ def makepub(df):
         maxx = max(xlist)
         x = np.linspace(minx-1.53,maxx+1.53,num = 100)
         #ax.annotate("EC50: %s" %rc, xy=(rc, mid))
-        ax.scatter(xlist, meanlist, color = clr)
+        ax.scatter(xlist, meanlist, marker = next(marker), label = iglun1 + '/' + iglun2, color = clr)
+        ax.legend()
         plot.errorbar(xlist, meanlist, color = clr, yerr = sdlist, linestyle="None")
         if fit:
             y = eval('(b+((t-b)/(1+10**((c-x)*h))))')
             ax.plot(x,y, color = clr, label = iglun1 + '/' + iglun2)
-    plot.legend()
     return(fig)
 
 def drcfunc1(x, c, h):
@@ -505,8 +508,9 @@ def get_dates():
     cursor.execute(query)
     datelist = []
     for row in cursor:
-        print(row)
-        datelist.append(row.strftime('%m%d%Y'))
+        row = row[0]
+        date_string = row[:10].replace('-','_')
+        datelist.append(date_string)
     return datelist
 
 def create_folder_system():
