@@ -10,6 +10,7 @@ import re
 import datetime
 from scipy.optimize import curve_fit
 from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib.lines as mlines
 from scipy import stats
 from statistics import stdev
 from configparser import RawConfigParser
@@ -226,6 +227,7 @@ def makepub(df):
     color=list(plot.cm.Set1(np.linspace(0,1,len(groups))))
     marker_list = ('o','v','s','+','D','.',',','^','<','>','1','2','3','4','p','*','h','H','x','d','|','_')
     marker = cycle(marker_list)
+    all_legend_handles = []
     for i in range(0,len(groups)):
         clr = color[i]
         # find the glun1 and glun2 of this iteration, and then grab the appropriate data from that iteration
@@ -263,12 +265,19 @@ def makepub(df):
         maxx = max(xlist)
         x = np.linspace(minx-1.53,maxx+1.53,num = 100)
         #ax.annotate("EC50: %s" %rc, xy=(rc, mid))
-        ax.scatter(xlist, meanlist, marker = next(marker), label = iglun1 + '/' + iglun2, color = clr)
-        ax.legend()
+        imarker = next(marker)
+        ax.scatter(xlist, meanlist, marker = imarker, color = clr)
         plot.errorbar(xlist, meanlist, color = clr, yerr = sdlist, linestyle="None")
         if fit:
             y = eval('(b+((t-b)/(1+10**((c-x)*h))))')
-            ax.plot(x,y, color = clr, label = iglun1 + '/' + iglun2)
+            ax.plot(x,y, color = clr)
+        # the below will add each of the created 'legend handles' which are just
+        # the things we want to show in the legend, like color shape
+        # this is done so that we get the line and scatter to have a single legend
+        legend_handle_row = mlines.Line2D([],[], color = clr, label = iglun1 + '/' + iglun2, marker = imarker)
+        all_legend_handles.append(legend_handle_row)
+    ax.legend(handles = all_legend_handles)
+
     return(fig)
 
 def drcfunc1(x, c, h):
