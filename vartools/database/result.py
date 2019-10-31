@@ -301,18 +301,18 @@ def makepub(df, logx = False):
         x = np.linspace(minx-1.53,maxx+1.53,num = 100)
         #ax.annotate("EC50: %s" %rc, xy=(rc, mid))
         imarker = next(marker)
-        if logx:
-            ax.scatter(xlist, meanlist, marker = imarker, color = clr)
-            plot.errorbar(xlist, meanlist, color = clr, yerr = sdlist, linestyle="None")
-        else:
-            ax.scatter(xlist_M, meanlist, marker = imarker, color = clr)
-            plot.errorbar(xlist_M, meanlist, color = clr, yerr = sdlist, linestyle="None")
         if fit:
             y = eval('(b+((t-b)/(1+10**((c-x)*h))))')
             if not logx:
                 newx = [to_M(i, base = 0) for i in x]
                 x = newx
-            ax.plot(x,y, color = clr)
+            ax.plot(x,y, color = clr, zorder=0)
+        if logx:
+            ax.scatter(xlist, meanlist, marker = imarker, color = clr, edgecolors = 'black', zorder=20)
+            plot.errorbar(xlist, meanlist, color = clr, yerr = sdlist, linestyle="None", capsize=6, zorder=10)
+        else:
+            ax.scatter(xlist_M, meanlist, marker = imarker, color = clr, edgecolors = 'black', zorder=20)
+            plot.errorbar(xlist_M, meanlist, color = clr, yerr = sdlist, linestyle="None", capsize=6, zorder=10)
         # the below will add each of the created 'legend handles' which are just
         # the things we want to show in the legend, like color shape
         # this is done so that we get the line and scatter to have a single legend
@@ -433,14 +433,14 @@ def makeresult(df, logx = False):
             x = newx
         #ax.annotate("EC50: %s" %rc, xy=(rc, mid))
         try:
-            ax.plot(x,y, color = clr, alpha = 0.5)
+            ax.plot(x,y, color = clr, alpha = 0.5, zorder=0)
         except:
             continue
         try:
             if logx:
-                ax.scatter(xlist, ylist, color = clr, marker = imarker, edgecolors = 'black', alpha = 0.5)
+                ax.scatter(xlist, ylist, color = clr, marker = imarker, edgecolors = 'black', alpha = 0.5, zorder=20)
             else:
-                ax.scatter(xlist_M, ylist, color = clr, marker = imarker, edgecolors = 'black', alpha = 0.5)
+                ax.scatter(xlist_M, ylist, color = clr, marker = imarker, edgecolors = 'black', alpha = 0.5, zorder=20)
         except:
             continue
 
