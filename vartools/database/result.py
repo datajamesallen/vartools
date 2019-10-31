@@ -184,6 +184,13 @@ def download_pub_variant_assay(Variant, assay):
     plot.close(fig)
     return None
 
+def download_result_variant_assay(Variant, assay):
+    df = getdbdata(Variant, assay)
+    fig = makeresult(df)
+    plot.savefig(Variant + '_' + assay + '_result.png')
+    plot.close(fig)
+    return None
+
 def makepub(df):
     """
     GOAL: make a publication-ready figure of the data fed to this function
@@ -289,7 +296,7 @@ def drcfunc3(x, t, c, h):
 def drcfunc4(x, t, b, c, h):
     return((b+((t-b)/(1+10**((c-x)*h)))))
 
-def makeresult(df):
+def makeresult(df, logx = False):
     """
     Intended to make a figure for data review and internal data anaylsis purposes
     Individual fits of individual curves
@@ -303,42 +310,76 @@ def makeresult(df):
     grouplen = len(groups)
     acode = df['assay'][0]
     if acode == "gluDRC":
-        aname = "log[Glutamate] M"
-        title = "Glutamate Dose Response Curve"
+        if not logx:
+            aname = "[Glutamate] M"
+        else:
+            aname = "log[Glutamate] M"
+        title = "Glutamate Dose Response"
     elif acode == "glyDRC":
-        aname = "log[Glycine] M"
-        title = "Glycine Dose Response Curve"
+        if not logx:
+            aname = "[Glycine] M"
+        else:
+            aname = "log[Glycine] M"
+        title = "Glycine Dose Response"
     elif acode == "mgDRC":
-        aname = "log[Magnesium] M"
-        title = "Magnesium Dose Inhibition Curve"
+        if not logx:
+            aname = "[Magnesium] M"
+        else:
+            aname = "log[Magnesium] M"
+        title = "Magnesium Dose Inhibition"
     elif acode == "znDRC":
-        aname = "log[Zinc] M"
-        title = "Zinc Dose Inhibition Curve"
+        if not logx:
+            aname = "[Zinc] M"
+        else:
+            aname = "log[Zinc] M"
+        title = "Zinc Dose Inhibition"
     fig, ax = plot.subplots()
-    plot.ylabel("% max reponse")
+    plot.ylabel("% Max Current")
     plot.xlabel(aname)
-    plot.xticks = (np.arange(-10,0,step = 0.5))
-    plot.suptitle(groups, fontsize=12)
+    ax.set_xticks(np.arange(-10,0,step = 1))
+    if not logx:
+        ax.semilogx()
+    ax.set_yticks(np.arange(0,125,step = 25))
+    ax.set_ylim([0,100])
+    ax.grid(True, linestyle='--', color = '#D3D3D3')
+    plot.suptitle(title, fontsize=12)
     doseh = ['logm10','logm9p5','logm9','logm8p5','logm8','logm7p5','logm7','logm6p5','logm6','logm5p5','logm5','logm4p5','logm4','logm3p5','logm3','logm2p5','logm2','logm1p5','logm1']
     doses = [-10,-9.5228,-9,-8.5228,-8,-7.5228,-7,-6.5228,-6,-5.5228,-5,-4.5228,-4,-3.5228,-3,-2.5228,-2,-1.5228,-1]
+    doses_M = [to_M(dose, base = 0) for dose in doses]
     color=list(plot.cm.Set1(np.linspace(0,1,grouplen)))
+    marker_list = ('o','v','s','+','D','.',',','^','<','>','1','2','3','4','p','*','h','H','x','d','|','_')
+    marker = cycle(marker_list)
+    all_legend_1_handles = []
+    all_legend_2_handles = []
+    # create the legends for the plot
+    for index, item in enumerate(groups):
+        clr = color[index]
+        legend_1_handle_row = mlines.Line2D([],[], color = clr, label = item)
+        all_legend_1_handles.append(legend_1_handle_row)
+
+    # now create a line and scatter for each oocyte
     for i,row in df.iterrows():
         fname = row["file"]
         iglun1 = row["glun1"]
         iglun2 = row["glun2"]
-        xlist, ylist = [], []
+        imarker = next(marker)
+        xlist, ylist, xlist_M = [], [], []
         for m in range(0,19):
             if not row[doseh[m]]:
                 continue
             ylist.append(row[doseh[m]])
             xlist.append(doses[m])
+            xlist_M.append(doses_M[m]) # for the molar doses
         for cindex,item in enumerate(groups):
             if item == (iglun1 + "/" + iglun2):
                 clr = color[cindex]
                 break
         c = row["logec50"]
         if not c:
-            ax.scatter(xlist,ylist,color=clr)
+            if logx:
+                ax.scatter(xlist,ylist,color=clr)
+            else:
+                ax.scatter(xlist_M,ylist,color=clr)
             continue
         rc = round(c, 2)
         h = row["hillslope"]
@@ -349,16 +390,29 @@ def makeresult(df):
         xmax = max(xlist)
         x = np.linspace(xmin-1.53,xmax+1.53,num = 100)
         y = eval('(b+((t-b)/(1+10**((c-x)*h))))')
+        if not logx:
+            newx = [to_M(i, base = 0) for i in x]
+            x = newx
         #ax.annotate("EC50: %s" %rc, xy=(rc, mid))
         try:
-            ax.scatter(xlist, ylist, color = clr)
+            ax.plot(x,y, color = clr, alpha = 0.5)
         except:
             continue
         try:
-            ax.plot(x,y, color = clr)
+            if logx:
+                ax.scatter(xlist, ylist, color = clr, marker = imarker, edgecolors = 'black', alpha = 0.5)
+            else:
+                ax.scatter(xlist_M, ylist, color = clr, marker = imarker, edgecolors = 'black', alpha = 0.5)
         except:
             continue
-    #plot.legend()
+
+        legend_2_handle_row = mlines.Line2D([],[], color = clr, label = fname, marker = imarker, markeredgecolor = 'black', alpha = 0.5)
+        all_legend_2_handles.append(legend_2_handle_row)
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.80, box.height])
+    leg1 = ax.legend(handles = all_legend_1_handles, bbox_to_anchor = (0.75,0.885), bbox_transform = fig.transFigure, loc = "upper left", prop={'size':5.5})
+    leg2 = ax.legend(handles = all_legend_2_handles, bbox_to_anchor = (0.75,0.815), bbox_transform = fig.transFigure, loc = "upper left", prop={'size':5.5})
+    ax.add_artist(leg1)
     return(fig)
 
 def getvariants():
@@ -552,6 +606,7 @@ def create_folder_system():
             os.chdir(var_assay_path)
             if assay not in ("pH"):
                 download_pub_variant_assay(variant, assay)
+                download_result_variant_assay(variant, assay)
             download_variant_assay(variant, assay)
     datedir = os.path.join(cwd, 'by_date')
     datelist = get_dates()
