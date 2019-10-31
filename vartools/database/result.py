@@ -47,11 +47,16 @@ def multi_getdbdata(Varlist, assay):
             fullrows.append(row)
     names = [description[0] for description in cursor.description]
     df = pandas.DataFrame(fullrows, columns = names)
-    print(df)
     df = df.drop(['upload_time'], axis=1)
     df = df.drop_duplicates(subset=['file'],keep='first')
-    print(df)
     return(df)
+
+def match_file_order(row):
+    ret = re.search(r"[\d]*.[\d]*$",row.file)
+    if ret:
+        return float(ret.group())
+    else:
+        return 0
 
 def getdbdata(Variant, assay):
     con = dbcon()
@@ -61,6 +66,9 @@ def getdbdata(Variant, assay):
     names = [description[0] for description in cursor.description]
     rows = cursor.fetchall()
     df = pandas.DataFrame(rows, columns = names)
+    df['file_order'] = df.apply(match_file_order, axis=1)
+    df = df.sort_values(by = ['glun1','glun2','date_rec','file_order'])
+    df.drop(['file_order'], axis=1)
     return(df)
 
 def download_variant_assay(Variant, assay):
@@ -191,7 +199,7 @@ def download_result_variant_assay(Variant, assay):
     plot.close(fig)
     return None
 
-def makepub(df):
+def makepub(df, logx = False):
     """
     GOAL: make a publication-ready figure of the data fed to this function
 
@@ -209,27 +217,45 @@ def makepub(df):
     # create different titles / descriptions based on the assay from the df
     acode = df['assay'][0]
     if acode == "gluDRC":
-        aname = "log[Glutamate] M"
-        title = "Glutamate Dose Response Curve"
+        if not logx:
+            aname = "[Glutamate] M"
+        else:
+            aname = "log[Glutamate] M"
+        title = "Glutamate Dose Response"
     elif acode == "glyDRC":
-        aname = "log[Glycine] M"
-        title = "Glycine Dose Response Curve"
+        if not logx:
+            aname = "[Glycine] M"
+        else:
+            aname = "log[Glycine] M"
+        title = "Glycine Dose Response"
     elif acode == "mgDRC":
-        aname = "log[Magnesium] M"
-        title = "Magnesium Dose Inhibition Curve"
+        if not logx:
+            aname = "[Magnesium] M"
+        else:
+            aname = "log[Magnesium] M"
+        title = "Magnesium Dose Inhibition"
     elif acode == "znDRC":
-        aname = "log[Zinc] M"
-        title = "Zinc Dose Inhibition Curve"
+        if not logx:
+            aname = "[Zinc] M"
+        else:
+            aname = "log[Zinc] M"
+        title = "Zinc Dose Inhibition"
     else:
-        sys.exit("Unexpected assay: " + acode)
+        sys.exit("Unexpected assay code: " + acode)
     # set up the plots
     fig, ax = plot.subplots()
-    plot.ylabel("% max reponse")
+    plot.ylabel("% Max Current")
     plot.xlabel(aname)
-    plot.xticks = (np.arange(-10,0,step = 0.5))
+    ax.set_xticks = (np.arange(-10,0,step = 1))
+    if not logx:
+        ax.semilogx()
+    ax.set_yticks(np.arange(0,125,step = 25))
+    ax.set_ylim([0,100])
+    ax.grid(True, linestyle='--', color = '#D3D3D3')
     fig.suptitle(title)
     doseh = ['logm10','logm9p5','logm9','logm8p5','logm8','logm7p5','logm7','logm6p5','logm6','logm5p5','logm5','logm4p5','logm4','logm3p5','logm3','logm2p5','logm2','logm1p5','logm1']
     doses = [-10,-9.5228,-9,-8.5228,-8,-7.5228,-7,-6.5228,-6,-5.5228,-5,-4.5228,-4,-3.5228,-3,-2.5228,-2,-1.5228,-1]
+    doses_M = [to_M(dose, base = 0) for dose in doses]
     # a list of colors to iterate through
     color=list(plot.cm.Set1(np.linspace(0,1,len(groups))))
     marker_list = ('o','v','s','+','D','.',',','^','<','>','1','2','3','4','p','*','h','H','x','d','|','_')
@@ -249,6 +275,7 @@ def makepub(df):
         meanlist = []
         countlist = []
         xlist = []
+        xlist_M = []
         for m in range(0,19):
             if math.isnan(oo[doseh[m]].mean()):
                 continue
@@ -256,6 +283,7 @@ def makepub(df):
             meanlist.append(oo[doseh[m]].mean())
             countlist.append(oo[doseh[m]].count())
             xlist.append(doses[m])
+            xlist_M.append(doses_M[m])
         semlist = []
         for v in range(0,len(sdlist)):
             semlist.append(sdlist[v]/math.sqrt(countlist[v]))
@@ -273,10 +301,17 @@ def makepub(df):
         x = np.linspace(minx-1.53,maxx+1.53,num = 100)
         #ax.annotate("EC50: %s" %rc, xy=(rc, mid))
         imarker = next(marker)
-        ax.scatter(xlist, meanlist, marker = imarker, color = clr)
-        plot.errorbar(xlist, meanlist, color = clr, yerr = sdlist, linestyle="None")
+        if logx:
+            ax.scatter(xlist, meanlist, marker = imarker, color = clr)
+            plot.errorbar(xlist, meanlist, color = clr, yerr = sdlist, linestyle="None")
+        else:
+            ax.scatter(xlist_M, meanlist, marker = imarker, color = clr)
+            plot.errorbar(xlist_M, meanlist, color = clr, yerr = sdlist, linestyle="None")
         if fit:
             y = eval('(b+((t-b)/(1+10**((c-x)*h))))')
+            if not logx:
+                newx = [to_M(i, base = 0) for i in x]
+                x = newx
             ax.plot(x,y, color = clr)
         # the below will add each of the created 'legend handles' which are just
         # the things we want to show in the legend, like color shape
@@ -303,6 +338,7 @@ def makeresult(df, logx = False):
     """
     if df.empty:
         return(None)
+    #df = df.sort_values(by=['Variant','date_rec','file'])
     grouped = df.groupby(['glun1','glun2'])
     groups = []
     for key,item in enumerate(grouped):
@@ -333,6 +369,8 @@ def makeresult(df, logx = False):
         else:
             aname = "log[Zinc] M"
         title = "Zinc Dose Inhibition"
+    else:
+        sys.exit("Unexpected assay code: " + acode)
     fig, ax = plot.subplots()
     plot.ylabel("% Max Current")
     plot.xlabel(aname)
