@@ -47,7 +47,7 @@ def show():
     """ show the path of the currently linked database """
     print(getdbpath())
 
-from vartools.database.database import dbinitdef
+from vartools.database import dbinitdef
 
 @click.command()
 @click.argument('name')
@@ -68,7 +68,7 @@ def init(name):
     parser.write(data)
     click.echo(dbpath_abs + ' linked to database')
 
-from vartools.database.database import oocytes_upload_all
+from vartools.database import oocytes_upload_all
 
 @click.command()
 @click.argument('files', nargs = -1)
@@ -97,13 +97,13 @@ def oo_upload(files, force):
 def dropdb(name):
     click.echo('Dropped the database')
 
-from vartools.database.clinvar import clinvar_script
+from vartools.clinvar import clinvar_script
 
 @click.command()
 def clinvar_update():
     clinvar_script()
 
-from vartools.database.gnomad import build_gnomAD_FromTranscriptList
+from vartools.gnomad import build_gnomAD_FromTranscriptList
 
 @click.command()
 @click.argument('transcript_list_file')
@@ -121,7 +121,7 @@ def result():
     """ database results functions """
     pass
 
-from vartools.database.result import download_variant_assay
+from vartools.result import download_variant_assay
 
 @click.command()
 @click.argument('variant')
@@ -130,7 +130,7 @@ def oo_download(variant, assay):
     download_variant_assay(variant, assay)
     return None
 
-from vartools.database.result import download_pub_variant_assay
+from vartools.result import download_pub_variant_assay
 
 @click.command()
 @click.argument('variant')
@@ -139,7 +139,7 @@ def pub_download(variant, assay):
     download_pub_variant_assay(variant, assay)
     return None
 
-from vartools.database.result import create_folder_system
+from vartools.result import create_folder_system
 
 @click.command()
 def folder_system():
@@ -163,7 +163,7 @@ def oo():
     """ oocyte related commands """
     pass
 
-from vartools.oocytes.prepare import convert_all
+from vartools.oo_prepare import convert_all
 
 @click.command()
 @click.argument('files', nargs = -1)

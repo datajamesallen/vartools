@@ -4,8 +4,8 @@ from json import dumps as json_dumps
 #import xml
 from time import sleep
 from time import time
-from vartools.database import varfx
-from vartools.database import xmlfx
+from vartools import varfx
+from vartools import xmlfx
 from sys import exit as sys_exit
 from sqlite3 import connect as sqlite3_connect
 from copy import deepcopy
