@@ -37,6 +37,7 @@ def xl2list(xlfile):
     # end starting values
     wb = load_workbook(xlfile)
     ws = wb['DataEntry']
+    assay = ws['AA3'].value
     i = start
     # the column names of the oocyte data happends to be uppercase letters A-Z
     oocols = ascii_uppercase
@@ -59,7 +60,11 @@ def xl2list(xlfile):
             if value != None:
                 fit_data.append(value)
                 fit_dose.append(doses[n])
-        ret = fit(fit_dose, fit_data)
+        if assay in ('mgDRC','znDRC'):
+            top_var = True
+        else:
+            top_var = False
+        ret = fit(fit_dose, fit_data, top_const=top_var)
         #print(ret)
         fits = [ret['c'],ret['h'],ret['b'],ret['t'],ret['p'],ret['i']]
         # below adds the fits back into the workbook
