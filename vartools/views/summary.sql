@@ -2,39 +2,8 @@ DROP VIEW IF EXISTS `summary`;
 
 CREATE 
  VIEW `summary` AS 
-select 
-human_variants_sumvar.Gene,
-human_variants_sumvar.aaNum,
-human_variants_sumvar.cDNA,
-human_variants_sumvar.Protein,
-human_variants_sumvar.Variant,
-human_variants_sumvar.RefSeq,
-gnomadsumvar.gnomad_all_AlleleCount,
-gnomadsumvar.gnomad_all_AlleleNum,
-gnomadsumvar.gnomad_controls_AlleleCount,
-gnomadsumvar.gnomad_controls_AlleleNum,
-gnomadsumvar.gnomad_nonneuro_AlleleCount,
-gnomadsumvar.gnomad_nonneuro_AlleleNum,
-gnomadsumvar.gnomad_nontopmed_AlleleCount,
-gnomadsumvar.gnomad_nontopmed_AlleleNum,
-clinvarsumvar.clinvar_CountObs,
-clinvarsumvar.clinvar_DateCreated,
-clinvarsumvar.clinvar_AlleleSource,
-clinvarsumvar.clinvar_TestingMethod,
-clinvarsumvar.clinvar_OrgName,
-clinvarsumvar.clinvar_AffectedStatus,
-clinvarsumvar.clinvar_Phenotype,
-lemkesumvar.lemke_Count,
-lemkesumvar.lemke_Zygosity,
-lemkesumvar.lemke_AlleleSource,
-lemkesumvar.lemke_Sex,
-lemkesumvar.lemke_Seq,
-lemkesumvar.lemke_Pubmed,
-lemkesumvar.lemke_DevDelay,
-lemkesumvar.lemke_Seizures,
-topmedsumvar.topmed_AlleleCount AS count_TOPMed,
-topmedsumvar.topmed_AlleleNum AS denom_TOPMed,
-/*--Glutamate*/
+SELECT
+all_variants.Variant,
 /*--wt*/
 oosumglu.wt_n_oocytes as wt_n_rec_glu,
 oosumglu.wt_n_fit as wt_n_fit_glu,
@@ -186,41 +155,29 @@ oosumzn.var_avg_logm6p5_zn,
 oosumzn.var_std_logm6p5_zn,
 oosumzn.var_avg_i as var_avg_i_zn,
 oosumzn.var_std_i as var_std_i_zn
-from
-human_variants_sumvar
-left join
+FROM
+all_variants
+LEFT JOIN
 oosumglu
 on
-oosumglu.Variant = human_variants_sumvar.Variant
+oosumglu.Variant = all_variants.Variant
 left join
 oosumgly
 on
-oosumgly.Variant = human_variants_sumvar.Variant
+oosumgly.Variant = all_variants.Variant
 left join
 oosumph
 on
-oosumph.Variant = human_variants_sumvar.Variant
+oosumph.Variant = all_variants.Variant
 left join
 oosummg
 on
-oosummg.Variant = human_variants_sumvar.Variant
+oosummg.Variant = all_variants.Variant
 left join
 oosumzn
 on
-oosumzn.Variant = human_variants_sumvar.Variant
-left join
-gnomadsumvar
-on
-gnomadsumvar.Variant = human_variants_sumvar.Variant
+oosumzn.Variant = all_variants.Variant
 left join
 clinvarsumvar
 on
-clinvarsumvar.Variant = human_variants_sumvar.Variant
-left join
-lemkesumvar
-on
-lemkesumvar.Variant = human_variants_sumvar.Variant
-left join
-topmedsumvar
-on
-topmedsumvar.Variant = human_variants_sumvar.Variant
+clinvarsumvar.Variant = all_variants.Variant

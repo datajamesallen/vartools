@@ -346,7 +346,7 @@ def dbcon():
     """ opens sqlite database connection from config """
     parser = RawConfigParser()
     basedir = dirname(__file__)
-    configdir = path_join(basedir, '../config.ini')
+    configdir = path_join(basedir, 'config.ini')
     parser.read(configdir)
     dbpath = parser.get('database','path')
     con = sqlite3_connect(dbpath)

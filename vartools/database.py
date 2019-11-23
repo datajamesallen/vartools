@@ -202,5 +202,22 @@ def dbinitdef(dbpath):
     for table in tables:
         table_fulldir = os.path.join(tabledir, table)
         executeScriptsFromFile(table_fulldir, con)
+    viewdir = os.path.join(BASEDIR, 'views')
+    views = os.listdir(viewdir)
+    for view in views:
+        view_fulldir = os.path.join(viewdir, view)
+        executeScriptsFromFile(view_fulldir, con)
     return None
 
+def db_update_views():
+    con = dbcon()
+    viewdir = os.path.join(BASEDIR, 'views')
+    views = os.listdir(viewdir)
+    for view in views:
+        view_fulldir = os.path.join(viewdir, view)
+        executeScriptsFromFile(view_fulldir, con)
+    print("The following views were overwritten/updated:")
+    print(views)
+    return None
+
+    

@@ -1,11 +1,14 @@
-import time
+import json
 import math
+import os
+import re
 import sqlite3
 import sys
-import re
-import json
-import os
+import time
 from collections import OrderedDict
+from vartools.database import dbcon
+
+BASEDIR = os.path.dirname(__file__)
 
 class StdevFunc:
     def __init__(self):
@@ -26,19 +29,8 @@ class StdevFunc:
             return None
         return math.sqrt(self.S / (self.k-2))
 
-def load_extension_functions():
-    con2 = sqlite3.connect('../var.db')
-    print(sqlite3.version)
-    print(sqlite3.sqlite_version)
-    con2.enable_load_extension(True)
-    #cursor = con.cursor()
-    libname = "../lib/libsqlitefunctions"
-    #cursor.execute("SELECT load_extension('" + libname + "')")
-    con2.load_extension(libname)
-    return(None)
-
-def rebuild_datadump('../var.db'):
-    con = sqlite3.connect(database)
+def rebuild_datadump():
+    con = dbcon()
     cursor = con.cursor()
     #load_extension_functions()
     con.create_aggregate("stdev", 1, StdevFunc)
@@ -61,7 +53,7 @@ def makedict(rows, colnames):
     return(drows)
 
 def export_datadump(Gene):
-    con = sqlite3.connect('../var.db')
+    con = dbcon()
     cursor = con.cursor()
     query = "SELECT * FROM database WHERE Gene = '" + Gene + "' ORDER BY aaNum"
     cursor.execute(query)

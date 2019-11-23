@@ -23,7 +23,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=dependencies,
-    package_data = {'vartools': ['blank.oo', 'config.ini', 'tables/*']},
+    package_data = {'vartools': ['blank.oo', 'config.ini', 'tables/*', 'views/*']},
     entry_points={
         'console_scripts': [
             'vartools = vartools.cli:main',

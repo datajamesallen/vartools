@@ -68,6 +68,14 @@ def init(name):
     parser.write(data)
     click.echo(dbpath_abs + ' linked to database')
 
+from vartools.database import db_update_views
+
+@click.command()
+def views_update():
+    """ update the views of the sqlite database """
+    db_update_views()
+    return None
+
 from vartools.database import oocytes_upload_all
 
 @click.command()
@@ -146,6 +154,14 @@ def folder_system():
     create_folder_system()
     return None
 
+from vartools.datadump import rebuild_datadump
+
+@click.command()
+def rebuild_database():
+    rebuild_datadump()
+    return None
+
+result.add_command(rebuild_database)
 result.add_command(folder_system)
 result.add_command(pub_download)
 result.add_command(oo_download)
@@ -154,6 +170,7 @@ db.add_command(result)
 db.add_command(link)
 db.add_command(show)
 db.add_command(init)
+db.add_command(views_update)
 db.add_command(clinvar_update)
 db.add_command(gnomad_update)
 db.add_command(oo_upload)
