@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 from distutils.core import Extension
 import platform
 
-dependencies = ['click','openpyxl','progressbar','hail']
+dependencies = ['click','openpyxl','progressbar','hail','pandasql','matplotlib','pydrc']
 
 operating_system = platform.system()
 
@@ -23,7 +23,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=dependencies,
-    package_data = {'vartools': ['oocytes/blank.oo', 'config.ini', 'database/tables/*']},
+    package_data = {'vartools': ['blank.oo', 'config.ini', 'tables/*']},
     entry_points={
         'console_scripts': [
             'vartools = vartools.cli:main',

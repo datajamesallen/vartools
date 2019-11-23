@@ -9,7 +9,7 @@ BASEDIR = os.path.dirname(__file__)
 def dbcon():
     """ returns the sqlite database connection object from the database
     that is currently 'linked' in the config.ini file """
-    configdir = os.path.join(BASEDIR, os.pardir, 'config.ini')
+    configdir = os.path.join(BASEDIR, 'config.ini')
     data = open(configdir, 'r+')
     parser = RawConfigParser()
     parser.read(configdir)

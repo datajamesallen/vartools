@@ -182,7 +182,7 @@ def prepare(files, output):
     if len(abs_files) == 0:
         print('Invalid path name supplied')
     install_dir = dirname(__file__)
-    header_abs = path_join(install_dir, 'oocytes/blank.oo')
+    header_abs = path_join(install_dir, 'blank.oo')
     convert_all(abs_files, header = header_abs, outdir = output)
 
 oo.add_command(prepare)
