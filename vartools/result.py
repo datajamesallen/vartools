@@ -216,6 +216,8 @@ def makepub(df, logx = False):
     # default to showing the fits
     # create different titles / descriptions based on the assay from the df
     acode = df['assay'][0]
+    top_const_var = False # initializing the constraint variables for fitting
+    bot_const_var = False
     if acode == "gluDRC":
         if not logx:
             aname = "[Glutamate] M"
@@ -229,12 +231,14 @@ def makepub(df, logx = False):
             aname = "log[Glycine] M"
         title = "Glycine Dose Response"
     elif acode == "mgDRC":
+        top_const_var = True
         if not logx:
             aname = "[Magnesium] M"
         else:
             aname = "log[Magnesium] M"
         title = "Magnesium Dose Inhibition"
     elif acode == "znDRC":
+        top_const_var = True
         if not logx:
             aname = "[Zinc] M"
         else:
@@ -287,7 +291,7 @@ def makepub(df, logx = False):
         semlist = []
         for v in range(0,len(sdlist)):
             semlist.append(sdlist[v]/math.sqrt(countlist[v]))
-        ret = fit4pdrc(xlist, meanlist)
+        ret = fit4pdrc(xlist, meanlist, top_const = top_const_var, bot_const = bot_const_var)
         b = ret['b']
         t = ret['t']
         h = ret['h']
