@@ -2,9 +2,6 @@
 
 A command line application for reducing repetitive data analysis
 
-I created this to do a better job at organizing my data.
-
-
 # Installation
 
 I recommend using pip or similar.
@@ -22,10 +19,6 @@ configure the currently used database
 	$ vartools db oocytes-upload [FILENAMES]      # upload prepared oocyte data to the linked database
 	$ vartools db clinvar-update                  # updates clinvar based on a list of genes
 	$ vartools db gnomad-update                   # updates gnomad based on a list of genes
-
-show the currently used database
-
-    $ vartools db show
 
 prepare oocyte data files
 
