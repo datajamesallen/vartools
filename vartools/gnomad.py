@@ -3,25 +3,19 @@
 # this script requires gsutil
 
 from urllib.request import urlopen
+from urllib.error import HTTPError
 from requests import get as requests_get
 from os.path import dirname
 from os.path import isfile
 from os.path import join as path_join
 from os import getcwd
+from os import remove as os_remove
 from sqlite3 import connect as sqlite3_connect
 #import json
 from configparser import RawConfigParser
 import progressbar as pb
 
-def dbcon():
-    """ opens sqlite database connection from config """
-    parser = RawConfigParser()
-    basedir = dirname(__file__)
-    configdir = path_join(basedir, '../config.ini')
-    parser.read(configdir)
-    dbpath = parser.get('database','path')
-    con = sqlite3_connect(dbpath)
-    return(con)
+from vartools.database import dbcon
 
 def parse_transcript_list(transcript_list_file):
     """ 
@@ -29,7 +23,7 @@ def parse_transcript_list(transcript_list_file):
     then returns a data structure containing the
     gene name, chromosome, and locus start and end
     """
-    if not os.path.isfile(transcript_list_file):
+    if not isfile(transcript_list_file):
         print('Invalid File name')
         raise SystemExit
     transcript_list = []
@@ -44,6 +38,9 @@ def parse_transcript_list(transcript_list_file):
         print(url)
         response = requests_get(url)
         data = response.json()
+        if "error" in data:
+            response = data["error"]
+            raise ValueError(response)
         chromosome = data["seq_region_name"]
         locus_intervals = (str(chromosome) + ":" + str(data["start"]) +
                            "-" + str(data["end"]))
@@ -68,11 +65,21 @@ def get_gnomad_data(chrom, version, exomes = True):
     url = ('https://storage.googleapis.com/gnomad-public/release/' +
            version + '/vcf/' + gmd_subset + '/gnomad.' + gmd_subset +
            '.r' + version + '.sites.' + chrom + '.vcf.bgz')
+    url2 = ('https://storage.googleapis.com/gnomad-public/release/' +
+    version + '/vcf/' + gmd_subset + '/gnomad.' + gmd_subset +
+    '.r' + version + '.sites.chr' + chrom + '.vcf.bgz')
+
     print("Downloading data from: ", url)
 
     writepath = path_join(getcwd(), 'gnomad_' + version + '_chr' + chrom + '.vcf.bgz')
 
-    response = urlopen(url)
+    try:
+        response = urlopen(url)
+    except HTTPError as err:
+        try:
+            response = urlopen(url2)
+        except:
+            raise
     #try: 
     #    response = urlopen(request)
     #except Exception:
@@ -97,14 +104,19 @@ def get_gnomad_data(chrom, version, exomes = True):
     return writepath
 
 from hail import init
-from hail import stop
+from hail import stop as hl_stop
 from hail import import_vcf
 from hail import literal as hl_literal
 from hail import filter_intervals
 from hail import parse_locus_interval
+from hail import empty_set as hl_empty_set
 from pandas import concat as pd_concat
 
 def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, synonymous = True):
+    """
+    Uses hail to process the gnomAD dataset 
+    """
+    basedir = dirname(__file__)
     """
     Uses hail to process the gnomAD dataset 
     """
@@ -125,7 +137,7 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
     mt = filter_intervals(mt, [parse_locus_interval(x,
                              reference_genome = 'GRCh37') for x in intervals]
                             )
-    mt = mt.filter_rows(mt.filters == hl.empty_set('str'))
+    mt = mt.filter_rows(mt.filters == hl_empty_set('str'))
     mt = mt.explode_rows(mt.info.vep)
     # get the right transcript
     mt = mt.annotate_rows(vep = mt.info.vep.split('\|'))
@@ -135,7 +147,7 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
     mt = mt.filter_rows(transcripts.contains(mt.enst))
     mt = mt.annotate_rows(vartype = mt.vep[1].split('&'))
     mt = mt.explode_rows(mt.vartype)
-    vartype_list = hl.literal(['frameshift_variant','inframe_deletion',
+    vartype_list = hl_literal(['frameshift_variant','inframe_deletion',
                                'inframe_insertion','missense_variant',
                                'start_lost','stop_gained'])
     if synonymous:
@@ -172,7 +184,7 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
     ht = ht.key_by(ht.chromosome, ht.position, ht.allele_ref, ht.allele_alt)
     ht = ht.drop(ht.alleles, ht.locus)
     df = ht.to_pandas()
-    hl.stop()
+    hl_stop()
     cols = df.columns.tolist()
     cols = cols[-4:] + cols[:-4]
     df = df[cols]
@@ -195,29 +207,60 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
 
 def build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version):
     """ builds all gnomAD data from a given gene list file """
+    con = dbcon()
+    cur = con.cursor()
+    table_name = "gnomADv" + gmd_version
+    query = "SELECT name FROM sqlite_master WHERE type='table' AND name='" + table_name + "'"
+    cur.execute(query)
+    if cur.rowcount == 0:
+        query = "SELECT TOP 0 * INTO " + table_name + " FROM gnomad"
+        cur.execute(query)
     transcript_dict = parse_transcript_list(transcript_list_file)
     print(transcript_dict)
     for chrom, transcript_list in transcript_dict.items():
-        exomes_data = get_gnomad_data(chrom, version = gmd_version,
+        try:
+            exomes_data = get_gnomad_data(chrom, version = gmd_version,
                                       exomes = True)
-        exomes_df = process_gnomad_data(exomes_data, chrom,
+            exomes_df = process_gnomad_data(exomes_data, chrom,
                                         transcript_list, exomes = True)
-        os.remove(exomes_data)
-        genomes_data = get_gnomad_data(chrom, version = gmd_version,
+            exomes_df_exists = True
+            os_remove(exomes_data)
+        except HTTPError as err:
+            if err.code == 404:
+                print("No exomes data found")
+                exomes_df_exists = False
+            else:
+                raise
+        try:
+            genomes_data = get_gnomad_data(chrom, version = gmd_version,
                                        exomes = False)
-        genomes_df = process_gnomad_data(genomes_data, chrom,
+            genomes_df = process_gnomad_data(genomes_data, chrom,
                                          transcript_list, exomes = False)
-        os.remove(genomes_data)
+            genomes_df_exists = True
+            os_remove(genomes_data)
+        except HTTPError as err:
+            if err.code == 404:
+                print("No genomes data found")
+                genomes_df_exists = False
+            else:
+                raise
         # combine the gnomad exomes data and the gnomad genomes data into one
         # pandas dataframe, and export it to the database
-        combined_df = pd_concat([exomes_df, genomes_df])
+        if (not exomes_df_exists and genomes_df_exists):
+            combined_df = pd_concat([exomes_df, genomes_df])
+        elif exomes_df_exists:
+            combined_df = exomes_df
+        elif genomes_df_exists:
+            combined_df = genomes_df
+        else:
+            raise ValueError("Unable to find requested gnomAD data")
         combined_df.loc[combined_df.duplicated(subset=['chromosome','position','allele_ref','allele_alt'],keep=False), 'source'] = 'both'
         combined_df = combined_df.drop_duplicates(['chromosome','position','allele_ref','allele_alt']).reset_index(drop=True)
         combined_df = combined_df.sort_values(by=['position'])
         filename = 'chr' + chrom + '_processed.tsv'
         #combined_df.to_csv(filename, sep='\t', encoding = 'utf-8', index=False)
         con = dbcon()
-        combined_df.to_sql('gnomad', con = con, if_exists = "append", index = False)
+        combined_df.to_sql(table_name, con = con, if_exists = "append", index = False)
         con.commit()
         con.close()
     return None
