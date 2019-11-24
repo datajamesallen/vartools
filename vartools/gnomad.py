@@ -33,7 +33,7 @@ def parse_transcript_list(transcript_list_file):
             transcript_list.append(row.rstrip())
     transcript_dict = {}
     for transcript in transcript_list:
-        url = ('https://grch37.rest.ensembl.org/lookup/id/' +
+        url = ('https://rest.ensembl.org/lookup/id/' +
                 transcript + '?content-type=application/json')
         print(url)
         response = requests_get(url)
@@ -42,7 +42,7 @@ def parse_transcript_list(transcript_list_file):
             response = data["error"]
             raise ValueError(response)
         chromosome = data["seq_region_name"]
-        locus_intervals = (str(chromosome) + ":" + str(data["start"]) +
+        locus_intervals = ("chr" + str(chromosome) + ":" + str(data["start"]) +
                            "-" + str(data["end"]))
         if chromosome not in transcript_dict:
             transcript_dict[chromosome] = []
@@ -62,28 +62,21 @@ def get_gnomad_data(chrom, version, exomes = True):
     else:
         gmd_subset = 'genomes'
     # fetch the correct vcf file to download for the chromosome
-    url = ('https://storage.googleapis.com/gnomad-public/release/' +
-           version + '/vcf/' + gmd_subset + '/gnomad.' + gmd_subset +
-           '.r' + version + '.sites.' + chrom + '.vcf.bgz')
-    url2 = ('https://storage.googleapis.com/gnomad-public/release/' +
-    version + '/vcf/' + gmd_subset + '/gnomad.' + gmd_subset +
-    '.r' + version + '.sites.chr' + chrom + '.vcf.bgz')
+    if version == "2.1.1":
+        url = ('https://storage.googleapis.com/gnomad-public/release/' +
+            version + '/liftover_grch38/vcf/' + gmd_subset + '/gnomad.' + gmd_subset +
+            '.r' + version + '.sites.' + chrom + '.liftover_grch38.vcf.bgz')
+    if version == "3.0":
+        url = ('https://storage.googleapis.com/gnomad-public/release/' +
+            version + '/vcf/' + gmd_subset + '/gnomad.' + gmd_subset +
+        '.r' + version + '.sites.chr' + chrom + '.vcf.bgz')
 
     print("Downloading data from: ", url)
 
     writepath = path_join(getcwd(), 'gnomad_' + version + '_chr' + chrom + '.vcf.bgz')
 
-    try:
-        response = urlopen(url)
-    except HTTPError as err:
-        try:
-            response = urlopen(url2)
-        except:
-            raise
-    #try: 
-    #    response = urlopen(request)
-    #except Exception:
-    #    print('url open failed')
+    response = urlopen(url)
+
     size = response.info()['Content-Length']
     gigsize = round(int(size)/1000000000,1)
     # partition the result into chunks of data,
@@ -103,26 +96,24 @@ def get_gnomad_data(chrom, version, exomes = True):
     print("Download Complete")
     return writepath
 
-from hail import init
+from hail import init as hl_init
 from hail import stop as hl_stop
 from hail import import_vcf
 from hail import literal as hl_literal
 from hail import filter_intervals
 from hail import parse_locus_interval
 from hail import empty_set as hl_empty_set
+from hail import null as hl_null
 from pandas import concat as pd_concat
 
 def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, synonymous = True):
     """
     Uses hail to process the gnomAD dataset 
     """
-    basedir = dirname(__file__)
-    """
-    Uses hail to process the gnomAD dataset 
-    """
+
     basedir = dirname(__file__)
     logdir = path_join(basedir, 'hail.log')
-    init(log = logdir, append = True)
+    hl_init(log = logdir, append = True, default_reference='GRCh38')
     # this try-except block makes sure the program won't spend time 
     # writing the table to disk if it already exists from a previous loop
     #try:
@@ -135,7 +126,7 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
     transcripts, intervals = zip(*transcript_list)
     transcripts = hl_literal(list(transcripts))
     mt = filter_intervals(mt, [parse_locus_interval(x,
-                             reference_genome = 'GRCh37') for x in intervals]
+                             reference_genome = 'GRCh38') for x in intervals]
                             )
     mt = mt.filter_rows(mt.filters == hl_empty_set('str'))
     mt = mt.explode_rows(mt.info.vep)
@@ -161,22 +152,68 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
     mt = mt.annotate_rows(transcript_consequence = mt.vep[10])
     mt = mt.annotate_rows(protein_consequence = mt.vep[11])
     mt = mt.annotate_rows(AC = mt.info.AC[0])
-    mt = mt.annotate_rows(non_neuro_AC = mt.info.non_neuro_AC[0])
-    mt = mt.annotate_rows(non_topmed_AC = mt.info.non_topmed_AC[0])
-    mt = mt.annotate_rows(controls_AC = mt.info.controls_AC[0])
-    mt = mt.annotate_rows(pab_max = mt.info.pab_max[0])
+    try:
+        mt = mt.annotate_rows(non_neuro_AC = mt.info.non_neuro_AC[0])
+        mt = mt.annotate_rows(non_neuro_AN = mt.info.non_neuro_AN[0])
+    except:
+        mt = mt.annotate_rows(non_neuro_AC = hl_null('int'))
+        mt = mt.annotate_rows(non_neuro_AN = hl_null('int'))
+    try:
+        mt = mt.annotate_rows(non_topmed_AC = mt.info.non_topmed_AC[0])
+        mt = mt.annotate_rows(non_topmed_AN = mt.info.non_topmed_AN[0])
+    except:
+        mt = mt.annotate_rows(non_topmed_AC = hl_null('int'))
+        mt = mt.annotate_rows(non_topmed_AN = hl_null('int'))
+    try:
+        mt = mt.annotate_rows(non_cancer_AC = mt.info.non_cancer_AC[0])
+        mt = mt.annotate_rows(non_cancer_AN = mt.info.non_cancer_AN[0])
+    except:
+        mt = mt.annotate_rows(non_cancer_AC = hl_null('int'))
+        mt = mt.annotate_rows(non_cancer_AN = hl_null('int'))
+    try:
+        mt = mt.annotate_rows(controls_AC = mt.info.controls_AC[0])
+        mt = mt.annotate_rows(controls_AN = mt.info.controls_AN[0])
+    except:
+        mt = mt.annotate_rows(controls_AC = hl_null('int'))
+        mt = mt.annotate_rows(controls_AN = hl_null('int'))
+    try:
+        mt = mt.annotate_rows(pab_max = mt.info.pab_max[0])
+    except:
+        mt = mt.annotate_rows(pab_max = hl_null('int'))
+    try:
+        mt = mt.annotate_rows(VQSLOD = mt.info.VQSLOD)
+    except:
+        mt = mt.annotate_rows(VQSLOD = hl_null('int'))
+    try:
+        mt = mt.annotate_rows(DP = mt.info.DP)
+    except:
+        mt = mt.annotate_rows(DP = hl_null('int'))
+    try:
+        mt = mt.annotate_rows(BaseQRankSum = mt.info.BaseQRankSum)
+    except:
+        mt = mt.annotate_rows(BaseQRankSum = hl_null('int'))
+    try:
+        mt = mt.annotate_rows(ClippingRankSum = mt.info.ClippingRankSum)
+    except:
+        mt = mt.annotate_rows(ClippingRankSum = hl_null('int'))
+    try:
+        mt = mt.annotate_rows(rf_tp_probability = mt.info.rf_tp_probability)
+    except:
+        mt = mt.annotate_rows(rf_tp_probability = hl_null('int'))
+
     ht = mt.select_rows(mt.qual,
                         mt.filters, mt.vartype, mt.gene,
                         mt.transcript_consequence, mt.protein_consequence,
                         mt.codon_num, mt.aa_change,
                         mt.info.FS, mt.info.MQRankSum, mt.info.InbreedingCoeff,
-                        mt.info.ReadPosRankSum, mt.info.VQSLOD, mt.info.QD,
-                        mt.info.DP, mt.info.BaseQRankSum, mt.info.MQ, mt.info.ClippingRankSum,
-                        mt.info.rf_tp_probability, mt.pab_max,
+                        mt.info.ReadPosRankSum, mt.VQSLOD, mt.info.QD,
+                        mt.DP, mt.BaseQRankSum, mt.info.MQ, mt.ClippingRankSum,
+                        mt.rf_tp_probability, mt.pab_max,
                         mt.AC, mt.info.AN,
-                        mt.non_neuro_AC, mt.info.non_neuro_AN,
-                        mt.non_topmed_AC, mt.info.non_topmed_AN,
-                        mt.controls_AC, mt.info.controls_AN
+                        mt.non_neuro_AC, mt.non_neuro_AN,
+                        mt.non_cancer_AC, mt.non_cancer_AN,
+                        mt.non_topmed_AC, mt.non_topmed_AN,
+                        mt.controls_AC, mt.controls_AN
                         ).make_table()
 
     ht = ht.annotate(chromosome = ht.locus.contig, position = ht.locus.position)
@@ -215,6 +252,8 @@ def build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version):
     if cur.rowcount == 0:
         query = "SELECT TOP 0 * INTO " + table_name + " FROM gnomad"
         cur.execute(query)
+    con.commit()
+    con.close()
     transcript_dict = parse_transcript_list(transcript_list_file)
     print(transcript_dict)
     for chrom, transcript_list in transcript_dict.items():
@@ -246,7 +285,7 @@ def build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version):
                 raise
         # combine the gnomad exomes data and the gnomad genomes data into one
         # pandas dataframe, and export it to the database
-        if (not exomes_df_exists and genomes_df_exists):
+        if (exomes_df_exists and genomes_df_exists):
             combined_df = pd_concat([exomes_df, genomes_df])
         elif exomes_df_exists:
             combined_df = exomes_df
@@ -264,8 +303,3 @@ def build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version):
         con.commit()
         con.close()
     return None
-
-if __name__ == "__main__":
-    gmd_version = '2.1.1'
-    transcript_list_file = 'transcript_list.csv'
-    build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version)

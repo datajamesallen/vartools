@@ -30,6 +30,8 @@ CREATE TABLE gnomad(
 	"AN" INT,
 	"non_neuro_AC" INT,
 	"non_neuro_AN" INT,
+	"non_cancer_AC" INT,
+	"non_cancer_ZN" INT,
 	"non_topmed_AC" INT,
 	"non_topmed_AN" INT,
 	"controls_AC" INT,
