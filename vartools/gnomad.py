@@ -228,6 +228,7 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
     df['filters'] = 'PASS'
     df['ref_aa'], df['alt_aa'] = df['aa_change'].str.split('/',1).str
     df.loc[df.vartype == 'synonymous_variant', 'protein_consequence'] = None
+    df['Variant'] = df.apply(lambda row: Variant_name(row), axis=1)
     df = df.drop(['aa_change'], axis = 1)
     cols = df.columns.tolist()
     cols = cols[:11] + cols[-2:] + cols[11:-2]
@@ -242,16 +243,29 @@ def process_gnomad_data(datapath, chromosome, transcript_list, exomes = True, sy
     #os.remove('temp_matrix_table_' + chromosome + '.mt')
     return df
 
+def Variant_name(row):
+    if row['gene'] == 'GRIN2A':
+        prefix = 'h2A-'
+    if row['gene'] == 'GRIN2B':
+        prefix = 'h2B-'
+    if row['gene'] == 'GRIN1':
+        prefix = 'h1a-'
+    if str(row['alt_aa']) == "nan":
+        alt = row['ref_aa']
+    else:
+        alt = row['alt_aa']
+    Variant = prefix + row['ref_aa'] + str(row['codon_num']) + alt
+    return Variant
+
 def build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version):
     """ builds all gnomAD data from a given gene list file """
     con = dbcon()
     cur = con.cursor()
     table_name = "gnomADv" + gmd_version
-    query = "SELECT name FROM sqlite_master WHERE type='table' AND name='" + table_name + "'"
+    query = "DROP TABLE IF EXISTS '" + table_name + "'"
     cur.execute(query)
-    if cur.rowcount == 0:
-        query = "SELECT TOP 0 * INTO " + table_name + " FROM gnomad"
-        cur.execute(query)
+    query = "CREATE TABLE '" + table_name + "' AS SELECT * FROM gnomad WHERE 0=1"
+    cur.execute(query)
     con.commit()
     con.close()
     transcript_dict = parse_transcript_list(transcript_list_file)

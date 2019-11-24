@@ -177,6 +177,10 @@ left join
 oosumzn
 on
 oosumzn.Variant = all_variants.Variant
+LEFT JOIN
+`gnomADv2.1.1`
+on
+`gnomADv2.1.1`.Variant = all_variants.Variant
 left join
 clinvarsumvar
 on
