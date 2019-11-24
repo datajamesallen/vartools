@@ -4,6 +4,53 @@ CREATE
  VIEW `summary` AS 
 SELECT
 all_variants.Variant,
+/*--gnomADv2.1.1*/
+gnomadv2.chromosome as gnomadv2_chromosome,
+gnomadv2.position as gnomadv2_position,
+gnomadv2.allele_ref as gnomadv2_allele_ref,
+gnomadv2.allele_alt as gnomadv2_allele_alt,
+gnomadv2.qual as gnomadv2_qual,
+gnomadv2.filters as gnomadv2_filters,
+gnomadv2.vartype as gnomadv2_vartype,
+gnomadv2.gene as gnomadv2_gene,
+gnomadv2.transcript_consequence as gnomadv2_transcript_consequence,
+gnomadv2.protein_consequence as gnomadv2_protein_consequence,
+gnomadv2.codon_num as gnomadv2_codon_num,
+gnomadv2.ref_aa as gnomadv2_ref_aa,
+gnomadv2.alt_aa as gnomadv2_alt_aa,
+gnomadv2.FS as gnomadv2_FS,
+gnomadv2.MQRankSum as gnomadv2_MQRankSum,
+gnomadv2.InbreedingCoeff as gnomadv2_InbreedingCoeff,
+gnomadv2.ReadPosRankSum as gnomadv2_ReadPosRankSum,
+gnomadv2.VQSLOD as gnomadv2_VQSLOD,
+gnomadv2.QD as gnomadv2_QD,
+gnomadv2.DP as gnomadv2_DP,
+gnomadv2.BaseQRankSum as gnomadv2_BaseQRankSum,
+gnomadv2.MQ as gnomadv2_MQ,
+gnomadv2.ClippingRankSum as gnomadv2_ClippingRankSum,
+gnomadv2.rf_tp_probability as gnomadv2_rf_tp_probability,
+gnomadv2.pab_max as gnomadv2_pab_max,
+gnomadv2.AC as gnomadv2_AC,
+gnomadv2.AN as gnomadv2_AN,
+gnomadv2.non_neuro_AC as gnomadv2_non_neuro_AC,
+gnomadv2.non_neuro_AN as gnomadv2_non_neuro_AN,
+gnomadv2.non_cancer_AC as gnomadv2_non_cancer_AC,
+gnomadv2.non_cancer_AN as gnomadv2_non_cancer_AN,
+gnomadv2.non_topmed_AC as gnomadv2_non_topmed_AC,
+gnomadv2.non_topmed_AN as gnomadv2_non_topmed_AN,
+gnomadv2.controls_AC as gnomadv2_controls_AC,
+gnomadv2.controls_AN as gnomadv2_controls_AN,
+gnomadv2.source as gnomadv2_source,
+/*--ClinVar*/
+clinvarsumvar.clinvar_DateCreated,
+clinvarsumvar.clinvar_CountObs,
+clinvarsumvar.clinvar_AlleleSource,
+clinvarsumvar.clinvar_TestingMethod,
+clinvarsumvar.clinvar_OrgName,
+clinvarsumvar.clinvar_OrgName,
+clinvarsumvar.clinvar_AffectedStatus,
+clinvarsumvar.clinvar_Phenotype,
+/*--Glutamate*/
 /*--wt*/
 oosumglu.wt_n_oocytes as wt_n_rec_glu,
 oosumglu.wt_n_fit as wt_n_fit_glu,
@@ -20,7 +67,6 @@ oosumglu.wt_avg_logm5p5_glu,
 oosumglu.wt_std_logm5p5_glu,
 oosumglu.wt_avg_i as wt_avg_i_glu,
 oosumglu.wt_std_i as wt_std_i_glu,
-
 /*--var*/
 oosumglu.var_n_oocytes as var_n_rec_glu,
 oosumglu.var_n_fit as var_n_fit_glu,
@@ -159,29 +205,29 @@ FROM
 all_variants
 LEFT JOIN
 oosumglu
-on
+ON
 oosumglu.Variant = all_variants.Variant
-left join
+LEFT JOIN
 oosumgly
-on
+ON
 oosumgly.Variant = all_variants.Variant
-left join
+LEFT JOIN
 oosumph
-on
+ON
 oosumph.Variant = all_variants.Variant
-left join
+LEFT JOIN
 oosummg
-on
+ON
 oosummg.Variant = all_variants.Variant
-left join
+LEFT JOIN
 oosumzn
-on
+ON
 oosumzn.Variant = all_variants.Variant
 LEFT JOIN
-`gnomADv2.1.1`
-on
-`gnomADv2.1.1`.Variant = all_variants.Variant
-left join
+gnomadv2
+ON
+gnomadv2.Variant = all_variants.Variant
+LEFT JOIN
 clinvarsumvar
-on
+ON
 clinvarsumvar.Variant = all_variants.Variant

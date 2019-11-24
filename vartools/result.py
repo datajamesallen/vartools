@@ -244,6 +244,13 @@ def makepub(df, logx = False):
         else:
             aname = "log[Zinc] M"
         title = "Zinc Dose Inhibition"
+    elif acode == "pHDRC":
+        top_const_var = True
+        if not logx:
+            aname = "pH"
+        else:
+            aname = "-pH"
+        title = "Proton Dose Inhibition"
     else:
         sys.exit("Unexpected assay code: " + acode)
     # set up the plots
@@ -373,6 +380,13 @@ def makeresult(df, logx = False):
         else:
             aname = "log[Zinc] M"
         title = "Zinc Dose Inhibition"
+    elif acode == "pHDRC":
+        top_const_var = True
+        if not logx:
+            aname = "pH"
+        else:
+            aname = "-pH"
+        title = "Proton Dose Inhibition"
     else:
         sys.exit("Unexpected assay code: " + acode)
     fig, ax = plot.subplots()

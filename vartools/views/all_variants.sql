@@ -3,8 +3,8 @@ DROP VIEW IF EXISTS `all_variants`;
 CREATE 
  VIEW `all_variants` AS 
 SELECT 
-DISTINCT `gnomADv2.1.1`.Variant
-FROM `gnomADv2.1.1`
+DISTINCT gnomadv2.Variant
+FROM gnomadv2
 UNION
 SELECT
 DISTINCT clinvarsumvar.Variant
