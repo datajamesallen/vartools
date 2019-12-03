@@ -147,11 +147,18 @@ def pub_download(variant, assay):
     download_pub_variant_assay(variant, assay)
     return None
 
-from vartools.result import create_folder_system
+from vartools.result import create_directory
 
 @click.command()
-def folder_system():
-    create_folder_system()
+@click.option('-c','-check_all','check_all',default = "True")
+def directory(check_all):
+    if check_all == "True":
+        check = True
+    elif check_all == "False":
+        check = False
+    else:
+        sys.exit("Invalid option: " + check_all)
+    create_directory(check)
     return None
 
 from vartools.datadump import rebuild_datadump
@@ -162,7 +169,7 @@ def rebuild_database():
     return None
 
 result.add_command(rebuild_database)
-result.add_command(folder_system)
+result.add_command(directory)
 result.add_command(pub_download)
 result.add_command(oo_download)
 

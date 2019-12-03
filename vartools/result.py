@@ -632,7 +632,8 @@ def get_dates():
         datelist.append(date_string)
     return datelist
 
-def create_folder_system():
+def create_directory(check_all):
+    print(check_all)
     """
     This command will generate an updated version of the data contained in the database
     in an organized file system format filled with csv files, png images, pdf's etc
@@ -649,8 +650,11 @@ def create_folder_system():
     if not os.path.exists(vardir):
         os.makedirs(vardir)
     for variant in varlist:
+        print(variant)
         # create a folder for each variant
         var_path = os.path.join(vardir, variant)
+        if (os.path.exists(var_path) and not check_all):
+            continue
         if not os.path.exists(var_path):
             os.makedirs(var_path)
         assaylist = get_assays(variant)
@@ -661,8 +665,18 @@ def create_folder_system():
                 os.makedirs(var_assay_path)
             os.chdir(var_assay_path)
             if assay not in ("pH"):
-                download_pub_variant_assay(variant, assay)
-                download_result_variant_assay(variant, assay)
+                try:
+                    download_result_variant_assay(variant, assay)
+                except:
+                    pass
+                if variant in ('h1a-D789N','h1a-F654C','h1a-N650I','h2A-A733T','h2A-D776Y','h2A-L411Q','h2A-R518C','h2A-R695Q','h2A-V713G','h2B-A1267S'):
+                # these variants are causing an error right now,
+                # please fix the error then remove this
+                    continue
+                try:
+                    download_pub_variant_assay(variant, assay)
+                except:
+                    pass
             download_variant_assay(variant, assay)
     datedir = os.path.join(cwd, 'by_date')
     datelist = get_dates()
