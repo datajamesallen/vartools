@@ -71,6 +71,25 @@ def getdbdata(Variant, assay):
     df.drop(['file_order'], axis=1)
     return(df)
 
+def getdbdata_date(date, assay):
+    con = dbcon()
+    cursor = con.cursor()
+    query = "SELECT * FROM varoocytes WHERE date_rec = '" + date + "' AND assay = '" + assay + "' UNION SELECT * FROM wtoocytes WHERE date_rec = '" + date + "' AND assay = '" + assay +"'"
+    cursor.execute(query)
+    names = [description[0] for description in cursor.description]
+    rows = cursor.fetchall()
+    df = pandas.DataFrame(rows, columns = names)
+    df['file_order'] = df.apply(match_file_order, axis=1)
+    df = df.sort_values(by = ['glun1','glun2','date_rec','file_order'])
+    df.drop(['file_order'], axis=1)
+    return(df)
+
+def download_date_assay(date, assay):
+    df = getdbdata_date(date,assay)
+    name = date + "-" + assay + ".csv"
+    df.to_csv(name, sep=',',index=False)
+    return None
+
 def download_variant_assay(Variant, assay):
     df = getdbdata(Variant, assay)
     name = Variant + "_" + assay + ".csv"
@@ -198,6 +217,14 @@ def download_result_variant_assay(Variant, assay):
     plot.savefig(Variant + '_' + assay + '_result.png')
     plot.close(fig)
     return None
+
+def download_result_date_assay(date, assay):
+    df = getdbdata_date(date, assay)
+    fig = makeresult(df)
+    plot.savefig(date + '_' + assay + '_result.png')
+    plot.close(fig)
+    return None
+    
 
 def makepub(df, logx = False):
     """
@@ -620,6 +647,16 @@ def get_assays(Variant):
         assaylist.append(str(row[0]))
     return assaylist
 
+def get_assays_date(date):
+    con = dbcon()
+    cursor = con.cursor()
+    query = "select distinct(assay) from varoocytes where date_rec = '" + date + "'"
+    cursor.execute(query)
+    assaylist = []
+    for row in cursor:
+        assaylist.append(str(row[0]))
+    return assaylist
+
 def get_dates():
     con = dbcon()
     cursor = con.cursor()
@@ -627,8 +664,11 @@ def get_dates():
     cursor.execute(query)
     datelist = []
     for row in cursor:
-        row = row[0]
-        date_string = row[:10].replace('-','_')
+        iteration = row[0]
+        if iteration == None:
+            date_string = "Unknown"
+        else:
+            date_string = iteration[:10]
         datelist.append(date_string)
     return datelist
 
@@ -683,10 +723,20 @@ def create_directory(check_all):
     if not os.path.exists(datedir):
         os.makedirs(datedir)
     for date in datelist:
-        date_path = os.path.join(datedir, date)
+        date_path = os.path.join(datedir, date.replace("-","_"))
+        print(date_path)
         if not os.path.exists(date_path):
             os.makedirs(date_path)
-    print("file structure created")
+        assaylist = get_assays_date(date)
+        for assay in assaylist:
+            date_assay_path = os.path.join(date_path, assay)
+            if not os.path.exists(date_assay_path):
+                os.makedirs(date_assay_path)
+            os.chdir(date_assay_path)
+            if assay not in ("pH"):
+                download_result_date_assay(date,assay)
+            download_date_assay(date, assay)
+    print("Directory created")
     return None
         
 
