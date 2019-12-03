@@ -669,7 +669,7 @@ def create_directory(check_all):
                     download_result_variant_assay(variant, assay)
                 except:
                     pass
-                if variant in ('h1a-D789N','h1a-F654C','h1a-N650I','h2A-A733T','h2A-D776Y','h2A-L411Q','h2A-R518C','h2A-R695Q','h2A-V713G','h2B-A1267S'):
+                if variant in ('h1a-D789N','h1a-F654C','h1a-N650I','h2A-A733T','h2A-D776Y','h2A-L411Q','h2A-R518C','h2A-R695Q','h2A-V713G','h2B-A1267S','h2B-A713V','h2B-F525V','h2B-G689C','h2B-I695T','h2B-M818L','h2B-R1099fsX51','h2B-R519G','h2B-T514A'):
                 # these variants are causing an error right now,
                 # please fix the error then remove this
                     continue
