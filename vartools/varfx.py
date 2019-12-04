@@ -1,8 +1,5 @@
 """
-A library for working with genetic data on human variants
-
-author: James Allen
-developed for SFTlab and CFERV
+Functions for working with glutamate receptor variants
 """
 
 import re
@@ -19,6 +16,9 @@ genedict = {'GRIN1':'h1a','GRIN2A':'h2A','GRIN2B':'h2B','GRIN2C':'h2C',
 'GRIK1':'hK1','GRIK2':'hK2','GRIK3':'hK3','GRIK4':'hK4','GRIK5':'hK5',
 'GRINA':'hA','GRIN3A':'h3A','GRIN3B':'h3B','GRID1':'hD1','GRID2':'hD2',
 'DLG4':'hdlg4'}
+
+# reversed dictionary
+rev_genedict = {v: k for k, v in genedict.items()}
 
 # for finding the 'cannonical' nm RefSeq for each each gene
 nmdict = {'GRIN1':'NM_007327.3','GRIN2A':'NM_000833.4','GRIN2B':'NM_000834.3',
@@ -78,6 +78,16 @@ def abrev_gene(gene):
     except:
         quit('invalid gene:' + gene)
     return(subunit)
+
+def un_abrev_gene(abrev):
+    """
+    unabreviates gene name
+    """
+    try:
+        gene = rev_genedict[abrev]
+    except:
+        quit('unrecognized subunit abbreviation:' + abrev)
+    return gene
 
 def getVariant(protein, gene):
     """

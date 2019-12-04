@@ -168,6 +168,14 @@ def rebuild_database():
     rebuild_datadump()
     return None
 
+from vartools.datadump import all_variants_ext
+
+@click.command()
+def show_all_variants():
+    all_variants_ext()
+    return None
+
+result.add_command(show_all_variants)
 result.add_command(rebuild_database)
 result.add_command(directory)
 result.add_command(pub_download)

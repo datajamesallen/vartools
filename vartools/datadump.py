@@ -32,7 +32,6 @@ class StdevFunc:
 def rebuild_datadump():
     con = dbcon()
     cursor = con.cursor()
-    #load_extension_functions()
     con.create_aggregate("stdev", 1, StdevFunc)
     query = "DROP TABLE IF EXISTS database"
     cursor.execute(query)
@@ -42,6 +41,51 @@ def rebuild_datadump():
     con.close()
     print("Database rebuilt")
     return(None)
+
+from vartools.varfx import getaaNumVar
+from vartools.varfx import un_abrev_gene
+
+def all_variants_ext():
+    """
+    extended version of all variants, with extrapolated information
+    """
+    con = dbcon()
+    cursor = con.cursor()
+    con.create_aggregate("stdev", 1, StdevFunc)
+    query = "SELECT * FROM all_variants"
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    variants_ext = []
+    for result in rows:
+        variant = result[0]
+        p = re.compile("([RHKDESTNQCUGPAVILMFYWX])[0-9]")
+        m = p.search(variant)
+        if m:
+            aa_orig = m.group(1)
+        p = re.compile("[^h][0-9]([RHKDESTNQCUGPAVILMFYWX])(?!el)")
+        m = p.search(variant)
+        if m:
+            aa_var = m.group(1)
+        aa_num = getaaNumVar(variant)
+        p = re.compile("(^.+?)-")
+        m = p.search(variant)
+        if m:
+            subunit = m.group(1)
+        gene = un_abrev_gene(subunit)
+        domain_dict = domainload(gene)
+        if domain_dict:
+            domain_dict = reversed(domain_dict[gene])
+            for entry in domain_dict:
+                if int(aa_num) <= int(entry["num"]):
+                    sub_domain = entry["Domain"]
+                    domain = entry["Class"]
+        else:
+            sub_domain = None
+            domain = None
+        all_variants_row = [gene, aa_orig, aa_var, aa_num, variant, sub_domain, domain]
+        print(all_variants_row)
+        variants_ext.append(all_variants_row)
+    return None
 
 def makedict(rows, colnames):
     drows = []
@@ -85,15 +129,16 @@ def zero(row, columns):
     return(row)
 
 def domainload(Gene):
-    with open("domains.json") as f:
+    domain_dir = os.path.join(BASEDIR, "domains.json")
+    with open(domain_dir) as f:
         d = json.load(f, object_pairs_hook=OrderedDict)
         d = d["Genes"]
-        if Gene in d:
-            domaind = OrderedDict(reversed(attributes.items()))
-        else:
-            domaind = None
+        domaind = None
+        for entry in d:
+            if Gene in entry:
+                domaind = OrderedDict(reversed(entry.items()))
         f.close()
-    return(domaind)
+    return domaind
 
 def parseddrow(row, domaind):
     """ parse each row of the dictionary for the datadump """
