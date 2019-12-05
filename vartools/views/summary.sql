@@ -3,7 +3,13 @@ DROP VIEW IF EXISTS `summary`;
 CREATE 
  VIEW `summary` AS 
 SELECT
-all_variants.Variant,
+all_variants_ext.gene as gene,
+all_variants_ext.aa_orig as aa_orig,
+all_variants_ext.aa_num as aa_num,
+all_variants_ext.aa_var as aa_var,
+all_variants_ext.sub_domain as sub_domain,
+all_variants_ext.domain as domain,
+all_variants_ext.variant as Variant,
 /*--gnomADv2.1.1*/
 gnomadv2.chromosome as gnomadv2_chromosome,
 gnomadv2.position as gnomadv2_position,
@@ -42,14 +48,18 @@ gnomadv2.controls_AC as gnomadv2_controls_AC,
 gnomadv2.controls_AN as gnomadv2_controls_AN,
 gnomadv2.source as gnomadv2_source,
 /*--ClinVar*/
-clinvarsumvar.clinvar_DateCreated,
-clinvarsumvar.clinvar_CountObs,
-clinvarsumvar.clinvar_AlleleSource,
-clinvarsumvar.clinvar_TestingMethod,
-clinvarsumvar.clinvar_OrgName,
-clinvarsumvar.clinvar_OrgName,
-clinvarsumvar.clinvar_AffectedStatus,
-clinvarsumvar.clinvar_Phenotype,
+clinvarsumdna.Gene as clinvar_Gene,
+clinvarsumdna.cDNA as clinvar_cDNA,
+clinvarsumdna.aaNum as clinvar_aaNum,
+clinvarsumdna.RefSeq as clinvar_RefSeq,
+clinvarsumdna.clinvar_DateCreated,
+clinvarsumdna.clinvar_CountObs,
+clinvarsumdna.clinvar_AlleleSource,
+clinvarsumdna.clinvar_TestingMethod,
+clinvarsumdna.clinvar_OrgName,
+clinvarsumdna.clinvar_OrgName,
+clinvarsumdna.clinvar_AffectedStatus,
+clinvarsumdna.clinvar_Phenotype,
 /*--Glutamate*/
 /*--wt*/
 oosumglu.wt_n_oocytes as wt_n_rec_glu,
@@ -202,32 +212,32 @@ oosumzn.var_std_logm6p5_zn,
 oosumzn.var_avg_i as var_avg_i_zn,
 oosumzn.var_std_i as var_std_i_zn
 FROM
-all_variants
+all_variants_ext
 LEFT JOIN
 oosumglu
 ON
-oosumglu.Variant = all_variants.Variant
+oosumglu.Variant = all_variants_ext.variant
 LEFT JOIN
 oosumgly
 ON
-oosumgly.Variant = all_variants.Variant
+oosumgly.Variant = all_variants_ext.variant
 LEFT JOIN
 oosumph
 ON
-oosumph.Variant = all_variants.Variant
+oosumph.Variant = all_variants_ext.variant
 LEFT JOIN
 oosummg
 ON
-oosummg.Variant = all_variants.Variant
+oosummg.Variant = all_variants_ext.variant
 LEFT JOIN
 oosumzn
 ON
-oosumzn.Variant = all_variants.Variant
+oosumzn.Variant = all_variants_ext.variant
 LEFT JOIN
 gnomadv2
 ON
-gnomadv2.Variant = all_variants.Variant
+gnomadv2.Variant = all_variants_ext.variant
 LEFT JOIN
-clinvarsumvar
+clinvarsumdna
 ON
-clinvarsumvar.Variant = all_variants.Variant
+clinvarsumdna.Variant = all_variants_ext.variant

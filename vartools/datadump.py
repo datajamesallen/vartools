@@ -29,26 +29,34 @@ class StdevFunc:
             return None
         return math.sqrt(self.S / (self.k-2))
 
-def rebuild_datadump():
-    con = dbcon()
-    cursor = con.cursor()
-    con.create_aggregate("stdev", 1, StdevFunc)
-    query = "DROP TABLE IF EXISTS database"
-    cursor.execute(query)
-    query = "CREATE TABLE database AS SELECT * FROM summary"
-    cursor.execute(query)
-    con.commit()
-    con.close()
-    print("Database rebuilt")
-    return(None)
-
 from vartools.varfx import getaaNumVar
 from vartools.varfx import un_abrev_gene
 
-def all_variants_ext():
+def create_all_variants_ext_table():
+    con = dbcon()
+    cursor = con.cursor()
+    con.create_aggregate("stdev",1,StdevFunc)
+    query = "DROP TABLE IF EXISTS all_variants_ext"
+    cursor.execute(query)
+    query = """ CREATE TABLE all_variants_ext (
+                    gene VARCHAR(25) NOT NULL,
+                    aa_orig VARCHAR(25),
+                    aa_num INT(255),
+                    aa_var VARCHAR(25),
+                    sub_domain VARCHAR(25),
+                    domain VARCHAR(25),
+                    variant VARCHAR(50) PRIMARY KEY
+                );"""
+    cursor.execute(query)
+    con.commit()
+    con.close()
+    return None
+
+def update_all_variants_ext():
     """
     extended version of all variants, with extrapolated information
     """
+    create_all_variants_ext_table() # drops the old table and makes a new one
     con = dbcon()
     cursor = con.cursor()
     con.create_aggregate("stdev", 1, StdevFunc)
@@ -82,10 +90,29 @@ def all_variants_ext():
         else:
             sub_domain = None
             domain = None
-        all_variants_row = [gene, aa_orig, aa_var, aa_num, variant, sub_domain, domain]
-        print(all_variants_row)
+        all_variants_row = [gene, aa_orig, aa_var, aa_num, sub_domain, domain, variant]
+        rowcur = con.cursor()
+        query = "INSERT INTO all_variants_ext VALUES (?,?,?,?,?,?,?)"
+        rowcur.execute(query, all_variants_row)
+        #print(all_variants_row)
         variants_ext.append(all_variants_row)
+    con.commit()
+    con.close()
     return None
+
+def rebuild_datadump():
+    update_all_variants_ext()
+    con = dbcon()
+    cursor = con.cursor()
+    con.create_aggregate("stdev", 1, StdevFunc)
+    query = "DROP TABLE IF EXISTS database"
+    cursor.execute(query)
+    query = "CREATE TABLE database AS SELECT * FROM summary"
+    cursor.execute(query)
+    con.commit()
+    con.close()
+    print("Database rebuilt")
+    return(None)
 
 def makedict(rows, colnames):
     drows = []

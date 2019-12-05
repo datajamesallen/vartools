@@ -3,8 +3,8 @@
 --
 DROP VIEW IF EXISTS `clinvarsumdna`;
 
-CREATE 
- VIEW `clinvarsumdna` AS 
+CREATE
+ VIEW `clinvarsumdna` AS
 SELECT
 `clinvar_variant`.`Gene`,
 `clinvar_variant`.Variant,
