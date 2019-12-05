@@ -377,17 +377,19 @@ hclinvar_obs = ['clinvar_VariationID','clinvar_ObsID','clinvar_AlleleSource',
 hclinvar_obs_phen = ['clinvar_VariationID','clinvar_ObsID','clinvar_AffectedStatus',
             'clinvar_Phenotype','clinvar_PhenotypeID','clinvar_phenXRefDB','clinvar_phenXRefID']
 
-def clinvar_script():
+def clinvar_script(gene_list_file):
 
     print("=====================================================")
-    print("|  Clinvar Data Miner for Nonsynonymous Variants    |")
-    print("|       Created by James Allen 2019 CFERV           |")
+    print("|    Clinvar Data Miner for Human Variants          |")
+    print("|         Created by James Allen 2019               |")
     print("-----------------------------------------------------")
     logger = init_logger()
-    print("Currently selected Gene list:")
     genelist = []
-    for key in varfx.genedict:
-        genelist.append(key)
+    with open(gene_list_file) as f:
+        result = f.readlines()
+        for row in result:
+            genelist.append(row.rstrip())
+    print("Currently selected Gene list:")
     counter = 0
     for item in genelist:
         if ((counter % 5) == 0 and counter != 0):

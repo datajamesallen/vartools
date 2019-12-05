@@ -108,8 +108,9 @@ def dropdb(name):
 from vartools.clinvar import clinvar_script
 
 @click.command()
-def clinvar_update():
-    clinvar_script()
+@click.argument('gene_list_file_path')
+def clinvar_update(gene_list_file_path):
+    clinvar_script(gene_list_file_path)
 
 from vartools.gnomad import build_gnomAD_FromTranscriptList
 
