@@ -169,7 +169,16 @@ def rebuild_database():
     rebuild_datadump()
     return None
 
-result.add_command(rebuild_database)
+from vartools.datadump import export_datadump
+
+@click.command()
+@click.argument('gene')
+def datadump(gene):
+    rebuild_datadump()
+    export_datadump(gene)
+    return None
+
+result.add_command(datadump)
 result.add_command(directory)
 result.add_command(pub_download)
 result.add_command(oo_download)

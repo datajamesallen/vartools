@@ -41,8 +41,8 @@ def create_all_variants_ext_table():
     query = """ CREATE TABLE all_variants_ext (
                     gene VARCHAR(25) NOT NULL,
                     aa_orig VARCHAR(25),
-                    aa_num INT(255),
                     aa_var VARCHAR(25),
+                    aa_num INT(255),
                     sub_domain VARCHAR(25),
                     domain VARCHAR(25),
                     variant VARCHAR(50) PRIMARY KEY
@@ -126,27 +126,19 @@ def makedict(rows, colnames):
 def export_datadump(Gene):
     con = dbcon()
     cursor = con.cursor()
-    query = "SELECT * FROM database WHERE Gene = '" + Gene + "' ORDER BY aaNum"
+    query = "SELECT * FROM database WHERE Gene = '" + Gene + "' ORDER BY aa_num"
     cursor.execute(query)
-
+    # get column headers
     names = [description[0] for description in cursor.description]
-    names = names  + ["orig_AA", "var_AA", "Seizures_ALL", "ID_ALL","top_TOTAL"]
-    rows = cursor.fetchall()
+    database = cursor.fetchall()
     con.close()
-
-    datadumpfile = os.path.join("../output", "database-" + Gene + time.strftime("-%Y%m%d-%H%M%S") + ".csv")
-    domaind = domainload(Gene)
-    d = makedict(rows, names)
-    for row in d:
-        parseddrow(row, domaind)
-
+    datadumpfile = "database-" + Gene + time.strftime("-%Y%m%d-%H%M%S") + ".csv"
     with open(datadumpfile, "w") as f:
         f.write(",".join(names) + "\n")
-        for row in d:
-            for key, value in row.items():
-                f.write(str(value) + ",")
-            f.write("\n")
-    return(None)
+        for row in database:
+            f.write(",".join([str(item) for item in row]) + "\n")
+    print(datadumpfile + " written to disk")
+    return None
 
 def zero(row, columns):
     # convert None to 0
@@ -166,69 +158,4 @@ def domainload(Gene):
                 domaind = OrderedDict(reversed(entry.items()))
         f.close()
     return domaind
-
-def parseddrow(row, domaind):
-    """ parse each row of the dictionary for the datadump """
-    # Create a row that shows the original amino acid on the transcript
-    p = re.compile("([RHKDESTNQCUGPAVILMFYWX])[0-9]")
-    m = p.search(row["Variant"])
-    if m:
-        row["origaa"] = m.group(1)
-    else:
-        row["origaa"] = None
-
-    # Create a row that shows the consequential amino acid of the variant
-    p = re.compile("[^h][0-9]([RHKDESTNQCUGPAVILMFYWX])(?!el)")
-    m = p.search(row["Variant"])
-    if m:
-        row["varaa"] = m.group(1)
-    else:
-        row["varaa"] = None
-
-    # Check if either lemke or clinvar say that a patient with a variant has seizures
-    p = re.compile("[Ss]eizures|[eE]pilepsy|[eE]pileptic encephalopathy")
-    m1 = p.search(str(row["clinvar_Phenotype"]))
-    p = re.compile("yes")
-    m2 = p.search(str(row["lemke_Seizures"]))
-    # check if either matched
-    if m1 or m2:
-        row["sz_est"] = "TRUE"
-    else:
-        row["sz_est"] = "FALSE"
-
-    # Check if either lemke or clinvar say that a patient with a variant has id
-    p = re.compile("[Ii]tellectual deficiency|[Ii]tellectual disability|[Mm]ental retardation|ID|DD")
-    m1 = p.search(str(row["clinvar_Phenotype"]))
-    p = re.compile(".")
-    m2 = p.search(str(row["lemke_DevDelay"]))
-    if m1 or m2:
-        row["id_est"] = "TRUE"
-    else:
-        row["id_est"] = "FALSE" 
-
-    # columns that need to have their values set to 0 if None
-    # this means that a variant not found in gnomAD will have 0, not "None"
-    zcolumnlist = ["gnomad_all_AlleleCount", "gnomad_controls_AlleleCount", "gnomad_nontopmed_AlleleCount","clinvar_CountObs", "count_TOPMed"]
-    row = zero(row, zcolumnlist)
-
-    # total counts for TOPMed
-    row["toptotal_AlleleCount"] = row["gnomad_nontopmed_AlleleCount"] + row["count_TOPMed"]
-    #row["toptotal_AlleleNum"] = row["gnomad_nontopmed_AlleleNum"] + row["denom_TOPMed"] / 2
-
-    # Write the domain information from the json file if available for this Gene
-    if domaind:
-        for entry in domaind:
-            if row["aaNum"] <= entry:
-                row["Domain"] = entry["Domain"]
-                row["Class"] = entry["Class"]
-    return(row)
-
-if __name__ == "__main__":
-    args = sys.argv
-    if len(args) != 2:
-        print("Please enter a Gene name to export this datadump")
-    Gene = args[1]
-    rebuild_datadump()
-    export_datadump(Gene)
-
 

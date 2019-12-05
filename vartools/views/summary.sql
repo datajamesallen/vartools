@@ -5,8 +5,8 @@ CREATE
 SELECT
 all_variants_ext.gene as gene,
 all_variants_ext.aa_orig as aa_orig,
-all_variants_ext.aa_num as aa_num,
 all_variants_ext.aa_var as aa_var,
+all_variants_ext.aa_num as aa_num,
 all_variants_ext.sub_domain as sub_domain,
 all_variants_ext.domain as domain,
 all_variants_ext.variant as Variant,
