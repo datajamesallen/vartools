@@ -36,17 +36,17 @@ def dbupload(datalist, force):
         fit = row[26:32]
         assay = row[32]
         try:
-            date_rec = datetime.datetime.strptime(row[33],'%Y-%m-%d')
+            date_rec = datetime.datetime.strptime(row[33],'%Y-%m-%d').date()
         except:
             try:
-                date_rec = datetime.datetime.strptime(row[33], '%d/%m/%y')
+                date_rec = datetime.datetime.strptime(row[33], '%d/%m/%y').date()
             except:
                 date_rec = None
         try:
-            date_inj = datetime.datetime.strptime(row[34],'%Y-%m-%d')
+            date_inj = datetime.datetime.strptime(row[34],'%Y-%m-%d').date()
         except:
             try:
-                date_inj = datetime.datetime.strptime(row[34], '%d/%m/%y')
+                date_inj = datetime.datetime.strptime(row[34], '%d/%m/%y').date()
             except:
                 date_inj = None
         volt = row[35]
