@@ -38,6 +38,64 @@ def xl2list(xlfile):
     wb = load_workbook(xlfile)
     ws = wb['DataEntry']
     assay = ws['AA3'].value
+    if not assay:
+        sys_exit("\nAssay code was not defined, exiting now")
+    if assay not in ("gluDRC","glyDRC","mgDRC","znDRC","pH","pHDRC","MTSEA"):
+        lassay = assay.lower().rstrip()
+        if lassay == "gludrc":
+            print("--- Correcting assay code from " + assay, end='')
+            assay = "gluDRC"
+            ws['AA3'].value = assay
+            print(" to " + assay)
+            print(xlfile, end = '')
+        elif lassay == "glydrc":
+            print("--- Correcting assay code from " + assay, end='')
+            assay = "glyDRC"
+            ws['AA3'].value = assay
+            print(" to " + assay)
+            print(xlfile, end = '')
+        elif lassay == "mgdrc":
+            print("--- Correcting assay code from " + assay, end='')
+            assay = "mgDRC"
+            ws['AA3'].value = assay
+            print(" to " + assay)
+            print(xlfile, end = '')
+        elif lassay == "zndrc":
+            print("--- Correcting assay code from " + assay, end='')
+            assay = "znDRC"
+            ws['AA3'].value = assay
+            print(" to " + assay)
+            print(xlfile, end = '')
+        elif lassay == "ph":
+            print("--- Correcting assay code from " + assay, end='')
+            assay = "pH"
+            ws['AA3'].value = assay
+            print(" to " + assay)
+            print(xlfile, end = '')
+        elif lassay == "mtsea":
+            print("--- Correcting assay code from " + assay, end='')
+            assay = "MTSEA"
+            ws['AA3'].value = assay
+            print(" to " + assay)
+            print(xlfile, end = '')
+        elif lassay == "phdrc":
+            print("--- Correcting assay code from " + assay, end='')
+            assay = "pHDRC"
+            wb['AA3'].value = assay
+            print(" to " + assay)
+            print(xlfile, end = '')
+        else:
+            print("\nWARNING: Assay code '" + assay + "' is not currently supported by the database")
+            print("Are you sure you know what you're doing?")
+            user_input = input("Continue? (yes/no/ENTER=no)")
+            if not user_input:
+                sys_exit()
+            elif user_input == "no":
+                sys_exit()
+            elif user_intput == "yes":
+                pass
+            else:
+                sys_exit()
     i = start
     # the column names of the oocyte data happends to be uppercase letters A-Z
     oocols = ascii_uppercase
@@ -77,14 +135,36 @@ def xl2list(xlfile):
         oolist.append(oorow)
         i += 1
     oolist.pop(-1) # the last row will be blank, need to remove it
-    i = start
+    i = start #3
     expcols = ['AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ']
     explist = []
     while exprow != expnonelist:
         exprow = readrow(ws, expcols, i)
+        #print(exprow)
+        date_rec = exprow[2]
+        if (exprow == expnonelist):
+            continue
+        date_inj = exprow[1]
+        if (not (isinstance(date_rec, datetime.datetime))):
+            sys_exit('\nInvalid type/value for date_rec' + str(date_rec))
+        if (not (isinstance(date_inj, datetime.datetime))):
+            sys_exit('\nInvlaid type/value for date_inj' + str(date_inj))
+        if (not (date_rec <= datetime.datetime.now())):
+            sys_exit('\nAre these recordings from the future? Your date_rec is: ' + date_rec.strftime("%Y%m%d"))
+        if (not (date_inj <= datetime.datetime.now())):
+            sys_exit('\nAre these injections from the future? Your date_inj is: ' + date_inj.strftime("%Y%m%d"))
+        if (not (date_rec > date_inj)):
+            sys_exit('\nYour recorded your oocytes before you injected them? How did you manage that? (your date_rec happened before your date_inj)')
+        if (not (datetime.date(year=2014, month=1, day=1) < date_rec.date())):
+            sys_exit('\nI doubt you did these recordings on ' + date_rec.strftime("%Y%m%d"))
+        if (not (datetime.date(year=2014, month=1, day=1) < date_inj.date())):
+            sys_exit('\nI doubt you did these recordings on ' + date_inj.strftime("%Y%m%d"))
+        date_delta = date_rec - date_inj
+        if (date_delta > datetime.timedelta(days=15)):
+            sys_exit('\nI doubt that you recorded more than 15 days after injections...')
         explist.append(exprow)
         i += 1
-    explist.pop(-1)
+    #explist.pop(-1)
     dlist = []
     if len(explist) == 1:
         for i,row in enumerate(oolist):
@@ -147,13 +227,13 @@ def ooconv(xlfile, header, outdir):
     """
     dlist = xl2list(xlfile)
     writeoofile(dlist, header, xlfile, outdir)
-    print("csv file sucessfully written to disk")
+    print(" --- csv file sucessfully written to disk")
     return(None)
 
 def convert_all(filelist, header, outdir):
     """ converts a list of excel files into .csv files in the specified outdir """
     for xlfile in filelist:
-        print(xlfile)
+        print(xlfile, end='')
         pre, ext = path_splitext(xlfile)
         if ext not in (".xlsx",".xls"):
             print("invlaid filetype: " + ext)
