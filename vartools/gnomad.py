@@ -261,17 +261,20 @@ def build_gnomAD_FromTranscriptList(transcript_list_file, gmd_version):
     """ builds all gnomAD data from a given gene list file """
     con = dbcon()
     cur = con.cursor()
+    table_name = "gnomadv2"
     if gmd_version == "2.1.1":
         gmd_name = "2"
     if gmd_version == "3.0":
         gmd_name = "3"
-    table_name = "gnomadv" + gmd_name
+    """
+    this code is now obselete
     query = "DROP TABLE IF EXISTS '" + table_name + "'"
     cur.execute(query)
     query = "CREATE TABLE '" + table_name + "' AS SELECT * FROM gnomad WHERE 0=1"
     cur.execute(query)
     con.commit()
     con.close()
+    """
     transcript_dict = parse_transcript_list(transcript_list_file)
     print(transcript_dict)
     for chrom, transcript_list in transcript_dict.items():

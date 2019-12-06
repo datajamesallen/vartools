@@ -81,7 +81,7 @@ def xl2list(xlfile):
         elif lassay == "phdrc":
             print("--- Correcting assay code from " + assay, end='')
             assay = "pHDRC"
-            wb['AA3'].value = assay
+            ws['AA3'].value = assay
             print(" to " + assay)
             print(xlfile, end = '')
         else:

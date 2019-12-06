@@ -22,7 +22,9 @@ def dbupload(datalist, force):
     takes the initial data from the datalist, parses and uploads to the database
     """
     glun1wt = ["h1a-WT","r1a-WT"]
+    glun1wt_l = ["h1a-wt","r1a-wt"]
     glun2wt = ["r2A-WT","r2B-WT","r2C-WT","r2D-WT","h2A-WT","h2B-WT","h2C-WT","h2D-WT"]
+    glun2wt_l = ["r2a-wt","r2b-wt","r2c-wt","r2d-wt","h2a-wt","h2a-wt","h2b-wt","h2c-wt","h2d-wt"]
     now = datetime.datetime.now()
     # first convert data into the proper data type so that SQLite knows how to deal with it
     newdatalist = []
@@ -54,7 +56,11 @@ def dbupload(datalist, force):
             if item == None:
                 newdat.append(item)
             else:
-                newdat.append(float(item))
+                try:
+                    item = float(item)
+                    newdat.append(item)
+                except:
+                    newdat.append(None)
         newfit = []
         for item in fit:
             if item == None:
@@ -69,14 +75,27 @@ def dbupload(datalist, force):
     wtlist = []
     for row in newdatalist:
         # check if the construct is wildtype
-        if row[1] in glun1wt and row[2] in glun2wt:
+        glun1_test_wt = row[1]
+        glun2_test_wt = row[2]
+        if glun1_test_wt in glun1wt and glun2_test_wt in glun2wt:
             wtlist.append((row[1], row[2]))
         else:
-            varlist.append((row[1],row[2]))
+            if (glun1_test_wt.lower() == 'h1a-wt') and (glun1_test_wt.lower() == 'h2a-wt'):
+                print("WARNING: incorrectly typed wildtype: " + glun1_test_wt + '/' + glun2_test_wt)
+                print("This will be fixed in the database, but not in the file")
+                wtlist.append(('h1a-WT','h2A-WT'))
+            elif (glun1_test_wt.lower() == 'h1a-wt') and (glun1_test_wt.lower() == 'h2b-wt'):
+                print("WARNING: incorrectly typed wildtype: " + glun1_test_wt + '/' + glun2_test_wt)
+                print("This will be fixed in the database, but not in the file")
+                wtlist.append(('h1a-WT','h2B-WT'))
+            else:
+                varlist.append((row[1],row[2]))
     varset = set(varlist)
     # this will be the list of variants by individual subunit
     variants = []
     for Variant in varset:
+        glun1_var = Variant[0]
+        glun2_var = Variant[1]
         if Variant[0] not in glun1wt:
             variants.append(Variant[0])
         if Variant[1] not in glun2wt:
@@ -89,8 +108,9 @@ def dbupload(datalist, force):
     remaining = []
     for Variant in variants:
         for row in newdatalist:
-            # check if the construct is wildtype
+            # check if the construct is wildtype for each data set
             if row[1] in glun1wt and row[2] in glun2wt:
+                # add in extra information
                 wtdata.append([Variant] + row + [now])
             else:
                 remaining.append(row)
@@ -99,9 +119,9 @@ def dbupload(datalist, force):
         if row[1] in glun1wt and row[2] in glun2wt:
             continue
         else:
-            if row[1] in glun1wt:
+            if row[1].lower() in glun1wt_l:
                 Variant = row[2]
-            elif row[2] in glun2wt:
+            elif row[2].lower() in glun2wt_l:
                 Variant = row[1]
             else:
                 sys.exit("could not figure out variant")

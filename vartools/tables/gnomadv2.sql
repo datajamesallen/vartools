@@ -1,6 +1,6 @@
-drop TABLE gnomad;
+drop TABLE gnomadv2;
 
-CREATE TABLE gnomad(
+CREATE TABLE gnomadv2(
 	"chromosome" INT,
 	"position" INT,
 	"allele_ref" VARCHAR(255),

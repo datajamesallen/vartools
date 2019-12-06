@@ -79,7 +79,11 @@ def update_all_variants_ext():
         m = p.search(variant)
         if m:
             subunit = m.group(1)
-        gene = un_abrev_gene(subunit)
+        try:
+            gene = un_abrev_gene(subunit)
+        except:
+            print("this was found in variant: " + variant)
+            raise
         domain_dict = domainload(gene)
         if domain_dict:
             domain_dict = reversed(domain_dict[gene])
