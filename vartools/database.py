@@ -106,12 +106,29 @@ def dbupload(datalist, force):
     # each file / experiment should be broken up by variant/wildtype pairings
     wtdata = []
     remaining = []
-    for Variant in variants:
+    # to correctly map each variant to its own control from that day
+    glun1_pairings = {'h1a':['r1a','h1a'],'r1a':['h1a','r1a']}
+    glun2_pairings = {'h2A':['r2A','h2A'],'r2A':['h2A','r2A'],'h2B':['h2B','r2B'],'r2B':['h2B','r2B'],'h2C':['h2C','r2C'],'r2C':['h2C','r2C'],'h2D':['h2D','r2D'],'r2D':['h2D','r2D']}
+    for Variant in varset:
+        glun1_sub_var = Variant[0][:3]
+        glun2_sub_var = Variant[1][:3]
+        if Variant[0] not in glun1wt:
+            glun1var = True
+        elif Variant[1] not in glun2wt:
+            glun1var = False
         for row in newdatalist:
             # check if the construct is wildtype for each data set
             if row[1] in glun1wt and row[2] in glun2wt:
-                # add in extra information
-                wtdata.append([Variant] + row + [now])
+                glun1_sub_wt = row[1][:3]
+                glun2_sub_wt = row[2][:3]
+                # check that the subunit paring names match.
+                # this will ensure that something like h1a-WT/h2A-WT will get matched with h1a-WT/h2A-S644G,
+                # but not h1a-WT/h2B-WT matched with h1a-WT/h2A-S644G.
+                if ((glun2_sub_wt in glun2_pairings[glun2_sub_var]) and (glun1_sub_wt in glun1_pairings[glun1_sub_var])):
+                    if glun1var:
+                        wtdata.append([Variant[0]] + row + [now])
+                    else:
+                        wtdata.append([Variant[1]] + row + [now])
             else:
                 remaining.append(row)
     vardata = []

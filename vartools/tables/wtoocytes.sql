@@ -42,6 +42,6 @@ CREATE TABLE `wtoocytes` (
 ,  `rig` char(3) DEFAULT NULL
 ,  `initials` char(3) DEFAULT NULL
 ,  `experiment_info` mediumtext DEFAULT NULL
-,  `upload_time` timestamp NOT NULL DEFAULT current_timestamp 
-,  PRIMARY KEY (`Variant`,`file`)
+,  `upload_time` timestamp NOT NULL DEFAULT current_timestamp
+,  PRIMARY KEY(`Variant`,`file`)
 );

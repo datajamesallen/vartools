@@ -104,7 +104,22 @@ def xl2list(xlfile):
     fitlist = []
     while oorow != oononelist:
         oorow = readrow(ws, oocols, i)
+        if oorow[0] == "display mode":
+            # delete any display mode data
+            i += 1
+            continue
         if oorow[-1] == "DEL":
+            # delete this data, it will not make it into the database
+            i += 1
+            continue
+        if oorow[-1] == "ASSAY=1min1conc":
+            # delete this data for now
+            i += 1
+            continue
+        if oorow[-1] == "NOFIT":
+            # this code is used for data that cannot be fit
+            fitlist.append([None,None,None,None,None,None])
+            oolist.append(oorow)
             i += 1
             continue
         # lets fit the data

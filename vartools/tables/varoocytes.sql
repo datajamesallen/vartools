@@ -1,6 +1,6 @@
 CREATE TABLE `varoocytes` (
   `Variant` varchar(255) DEFAULT NULL
-,  `file` char(25) NOT NULL
+,  `file` char(25) NOT NULL PRIMARY KEY
 ,  `glun1` varchar(25) NOT NULL
 ,  `glun2` varchar(25) NOT NULL
 ,  `i` integer DEFAULT NULL
@@ -42,7 +42,6 @@ CREATE TABLE `varoocytes` (
 ,  `rig` char(3) DEFAULT NULL
 ,  `initials` char(3) DEFAULT NULL
 ,  `experiment_info` mediumtext DEFAULT NULL
-,  `upload_time` timestamp NOT NULL DEFAULT current_timestamp 
-,  PRIMARY KEY (`file`)
+,  `upload_time` timestamp NOT NULL DEFAULT current_timestamp
 );
 CREATE INDEX "idx_varoocytes_Variant" ON "varoocytes" (`Variant`);
