@@ -170,9 +170,9 @@ def xl2list(xlfile):
             sys_exit('\nAre these injections from the future? Your date_inj is: ' + date_inj.strftime("%Y%m%d"))
         if (not (date_rec > date_inj)):
             sys_exit('\nYour recorded your oocytes before you injected them? How did you manage that? (your date_rec happened before your date_inj)')
-        if (not (datetime.date(year=2014, month=1, day=1) < date_rec.date())):
+        if (not (datetime.date(year=2012, month=1, day=1) < date_rec.date())):
             sys_exit('\nI doubt you did these recordings on ' + date_rec.strftime("%Y%m%d"))
-        if (not (datetime.date(year=2014, month=1, day=1) < date_inj.date())):
+        if (not (datetime.date(year=2012, month=1, day=1) < date_inj.date())):
             sys_exit('\nI doubt you did these recordings on ' + date_inj.strftime("%Y%m%d"))
         date_delta = date_rec - date_inj
         if (date_delta > datetime.timedelta(days=15)):

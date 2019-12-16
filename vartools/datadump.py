@@ -130,13 +130,26 @@ def makedict(rows, colnames):
 def export_datadump(Gene):
     con = dbcon()
     cursor = con.cursor()
+    # first lets find the name of this database file
+    cursor.execute("PRAGMA database_list;")
+    db_name = cursor.fetchall()
+    # get the file path
+    db_name = db_name[0][2]
+    # parse the name of the file from the path
+    p = re.compile(".*\/([^\/]+).db")
+    m = p.search(db_name)
+    if m:
+        db_name = m.group(1)
+    else:
+        db_name = 'database'
+    # now make queries to get the data
     query = "SELECT * FROM database WHERE Gene = '" + Gene + "' ORDER BY aa_num"
     cursor.execute(query)
     # get column headers
     names = [description[0] for description in cursor.description]
     database = cursor.fetchall()
     con.close()
-    datadumpfile = "database-" + Gene + time.strftime("-%Y%m%d-%H%M%S") + ".csv"
+    datadumpfile = db_name + "-" + Gene + time.strftime("-%Y%m%d-%H%M%S") + ".csv"
     with open(datadumpfile, "w") as f:
         f.write(",".join(names) + "\n")
         for row in database:
