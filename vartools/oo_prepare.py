@@ -254,3 +254,7 @@ def convert_all(filelist, header, outdir):
             print("invlaid filetype: " + ext)
             continue
         ooconv(xlfile, header, outdir)
+
+def re_fit_prepared(file_name):
+    """ re-fits a prepared oocyte.csv file """
+    # this has not been written yet

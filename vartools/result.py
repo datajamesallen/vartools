@@ -68,7 +68,7 @@ def getdbdata(Variant, assay):
     df = pandas.DataFrame(rows, columns = names)
     df['file_order'] = df.apply(match_file_order, axis=1)
     df = df.sort_values(by = ['glun1','glun2','date_rec','file_order'])
-    df.drop(['file_order'], axis=1)
+    df = df.drop(['file_order'], axis=1)
     return(df)
 
 def getdbdata_date(date, assay):
@@ -81,20 +81,68 @@ def getdbdata_date(date, assay):
     df = pandas.DataFrame(rows, columns = names)
     df['file_order'] = df.apply(match_file_order, axis=1)
     df = df.sort_values(by = ['glun1','glun2','date_rec','file_order'])
-    df.drop(['file_order'], axis=1)
+    df = df.drop(['file_order'], axis=1)
     return(df)
 
-def download_date_assay(date, assay):
+def download_date_assay_csv(date, assay):
+    """ download a csv file of all the data associated with a variant / date """
     df = getdbdata_date(date,assay)
     name = date + "-" + assay + ".csv"
     df.to_csv(name, sep=',',index=False)
     return None
 
-def download_variant_assay(Variant, assay):
+def download_variant_assay_csv(Variant, assay):
+    """ download a csv file of all data associated with a variants / assay """
     df = getdbdata(Variant, assay)
     name = Variant + "_" + assay + ".csv"
     df.to_csv(name, sep=',',index=False)
     return None
+
+def re_fit_data(file_name, top_c = True, bot_c = True):
+    """
+    re-fits a downloaded variant assay pair 
+
+    optionally supply top_c (True/False)
+    or bot_c (True/False)
+    to constrian the top or bot of the hillsiope equation
+    """
+
+    from pydrc import fit4pdrc as fit
+
+    with open(file_name, 'r') as f:
+        res = []
+        for line in f:
+            res.append(line.rstrip().split(','))
+    header = res[0]
+    res = res[1:] # no header
+    dose = [-10,-9.53,-9,-8.53,-8,-7.53,-7,-6.53,-6,-5.53,-5,-4.53,-4,-3.53,-3,-2.53,-2,-1.53,-1]
+    new_res = [header]
+    for row in res:
+        fit_dose = []
+        fit_res = []
+        response = row[6:25]
+        # need to get non missing data !
+        for i,item in enumerate(response):
+            if item == '':
+                continue
+            else:
+                fit_res.append(float(item))
+                fit_dose.append(dose[i])
+        print(fit_dose)
+        print(fit_res)
+        ret = fit(fit_dose, fit_res, top_const=top_c, bot_const=bot_c)
+        fits = [ret['c'],ret['h'],ret['b'],ret['t'],ret['p'],ret['i']]
+        # create a new row with the newly created fits
+        new_row = row[:27] + fits + row[33:]
+        print(new_row)
+        new_res.append(new_row)
+    with open(file_name, 'w') as f:
+        for line in new_res:
+            f.write(','.join([str(x) for x in line]) + '\n')
+    return None
+
+def replace_variant_assay_result(file_name):
+    """ replaces a given variant assay result with the updated information """
 
 def getaa(variant):
     result = re.findall(r'\d+', variant)
@@ -717,7 +765,7 @@ def create_directory(check_all):
                     download_pub_variant_assay(variant, assay)
                 except:
                     pass
-            download_variant_assay(variant, assay)
+            download_variant_assay_csv(variant, assay)
     datedir = os.path.join(cwd, 'by_date')
     datelist = get_dates()
     if not os.path.exists(datedir):
