@@ -148,27 +148,6 @@ def oo_download(variant, assay):
     return None
 
 @click.command()
-@click.argument('file_name')
-@click.option('-t','-top_constraint','top_c', default = "False")
-@click.option('-b','-bot_constraint','bot_c', default = "False")
-def re_fit_oo(file_name, top_c, bot_c):
-    from vartools.result import re_fit_data
-    if top_c == "True":
-        top_c = True
-    elif top_c == "False":
-        top_c = False
-    else:
-        sys.exit("Invalid option: " + top_c)
-    if bot_c == "True":
-        bot_c = True
-    elif bot_c == "False":
-        bot_c = False
-    else:
-        sys.exit("Invalid option: " + bot_c)
-    re_fit_data(file_name, top_c, bot_c)
-    return None
-
-@click.command()
 @click.argument('variant')
 @click.argument('assay')
 def pub_download(variant, assay):
@@ -217,7 +196,6 @@ result.add_command(datadump)
 result.add_command(directory)
 result.add_command(pub_download)
 result.add_command(oo_download)
-result.add_command(re_fit_oo)
 
 db.add_command(result)
 db.add_command(link)
@@ -257,7 +235,31 @@ def prepare(files, output):
     header_abs = path_join(install_dir, 'blank.oo')
     convert_all(abs_files, header = header_abs, outdir = output)
 
+@click.command()
+@click.argument('file_name')
+@click.option('-t','-top_constraint','top_c', default = "False")
+@click.option('-b','-bot_constraint','bot_c', default = "False")
+def re_fit(file_name, top_c, bot_c):
+    """ re-fits a prepared oocyte file """
+    from vartools.result import re_fit_data
+    if top_c == "True":
+        top_c = True
+    elif top_c == "False":
+        top_c = False
+    else:
+        sys.exit("Invalid option: " + top_c)
+    if bot_c == "True":
+        bot_c = True
+    elif bot_c == "False":
+        bot_c = False
+    else:
+        sys.exit("Invalid option: " + bot_c)
+    re_fit_data(file_name, top_c, bot_c)
+    return None
+
+
 oo.add_command(prepare)
+oo.add_command(re_fit)
 
 @click.group()
 def master():

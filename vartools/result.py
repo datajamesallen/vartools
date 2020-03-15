@@ -69,6 +69,8 @@ def getdbdata(Variant, assay):
     df['file_order'] = df.apply(match_file_order, axis=1)
     df = df.sort_values(by = ['glun1','glun2','date_rec','file_order'])
     df = df.drop(['file_order'], axis=1)
+    df = df.drop(['Variant'], axis=1)
+    df = df.drop(['upload_time'], axis=1)
     return(df)
 
 def getdbdata_date(date, assay):
@@ -82,6 +84,8 @@ def getdbdata_date(date, assay):
     df['file_order'] = df.apply(match_file_order, axis=1)
     df = df.sort_values(by = ['glun1','glun2','date_rec','file_order'])
     df = df.drop(['file_order'], axis=1)
+    df = df.drop(['Variant'], axis=1)
+    df = df.drop(['upload_time'], axis=1)
     return(df)
 
 def download_date_assay_csv(date, assay):
@@ -120,7 +124,7 @@ def re_fit_data(file_name, top_c = True, bot_c = True):
     for row in res:
         fit_dose = []
         fit_res = []
-        response = row[6:25]
+        response = row[5:24]
         # need to get non missing data !
         for i,item in enumerate(response):
             if item == '':
@@ -133,7 +137,7 @@ def re_fit_data(file_name, top_c = True, bot_c = True):
         ret = fit(fit_dose, fit_res, top_const=top_c, bot_const=bot_c)
         fits = [ret['c'],ret['h'],ret['b'],ret['t'],ret['p'],ret['i']]
         # create a new row with the newly created fits
-        new_row = row[:27] + fits + row[33:]
+        new_row = row[:26] + fits + row[32:]
         print(new_row)
         new_res.append(new_row)
     with open(file_name, 'w') as f:
@@ -141,8 +145,54 @@ def re_fit_data(file_name, top_c = True, bot_c = True):
             f.write(','.join([str(x) for x in line]) + '\n')
     return None
 
-def replace_variant_assay_result(file_name):
+def re_upload_data(file_name):
     """ replaces a given variant assay result with the updated information """
+
+    now = datetime.datetime.now()
+    # first convert data into the proper data type so that SQLite knows how to deal with it
+    newdatalist = []
+    for row in datalist:
+        #print(row)
+        intro = row[:4]
+        dat = row[4:25]
+        info = row[25:27]
+        fit = row[27:33]
+        assay = row[33]
+        try:
+            date_rec = datetime.datetime.strptime(row[33],'%Y-%m-%d').date()
+        except:
+            try:
+                date_rec = datetime.datetime.strptime(row[33], '%d/%m/%y').date()
+            except:
+                date_rec = None
+        try:
+            date_inj = datetime.datetime.strptime(row[34],'%Y-%m-%d').date()
+        except:
+            try:
+                date_inj = datetime.datetime.strptime(row[34], '%d/%m/%y').date()
+            except:
+                date_inj = None
+        volt = row[35]
+        last = row[36:]
+        newdat = []
+        for item in dat:
+            if item == None:
+                newdat.append(item)
+            else:
+                try:
+                    item = float(item)
+                    newdat.append(item)
+                except:
+                    newdat.append(None)
+        newfit = []
+        for item in fit:
+            if item == None:
+                newfit.append(item)
+            else:
+                newfit.append(float(item))
+        newrow = intro + newdat + info + newfit + [assay] + [date_rec] + [date_inj] + [volt] + last
+        newdatalist.append(newrow)
+
 
 def getaa(variant):
     result = re.findall(r'\d+', variant)
