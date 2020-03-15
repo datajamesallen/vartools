@@ -47,12 +47,13 @@ def show():
     """ show the path of the currently linked database """
     print(getdbpath())
 
-from vartools.database import dbinitdef
-
 @click.command()
 @click.argument('name')
 def init(name):
     """ initialize a sqlite database with default schema """
+
+    from vartools.database import dbinitdef
+
     dbpath_abs = abspath(name)
     dbinitdef(dbpath_abs)
     click.echo('Initialized the database: ' + name)
@@ -68,15 +69,14 @@ def init(name):
     parser.write(data)
     click.echo(dbpath_abs + ' linked to database')
 
-from vartools.database import db_update_views
-
 @click.command()
 def views_update():
     """ update the views of the sqlite database """
+
+    from vartools.database import db_update_views
+
     db_update_views()
     return None
-
-from vartools.database import oocytes_upload_all
 
 @click.command()
 @click.argument('files', nargs = -1)
@@ -85,6 +85,9 @@ def oo_upload(files, force):
     """
     uploads prepared oocyte .csv files to the linked database
     """
+
+    from vartools.database import oocytes_upload_all
+
     abs_files = []
     for f in files:
         abs_f = abspath(f)
@@ -105,14 +108,13 @@ def oo_upload(files, force):
 def dropdb(name):
     click.echo('Dropped the database')
 
-from vartools.clinvar import clinvar_script
-
 @click.command()
 @click.argument('gene_list_file_path')
 def clinvar_update(gene_list_file_path):
-    clinvar_script(gene_list_file_path)
 
-from vartools.gnomad import build_gnomAD_FromTranscriptList
+    from vartools.clinvar import clinvar_script
+
+    clinvar_script(gene_list_file_path)
 
 @click.command()
 @click.argument('transcript_list_file')
@@ -123,6 +125,9 @@ def gnomad_update(transcript_list_file, version):
     for a given list of ENST transcripts in a line
     separated file
     """
+
+    from vartools.gnomad import build_gnomAD_FromTranscriptList
+
     build_gnomAD_FromTranscriptList(transcript_list_file, version)
 
 @click.group()
@@ -130,29 +135,33 @@ def result():
     """ database results functions """
     pass
 
-from vartools.result import download_variant_assay
 
 @click.command()
 @click.argument('variant')
 @click.argument('assay')
 def oo_download(variant, assay):
+
+    from vartools.result import download_variant_assay
+
     download_variant_assay(variant, assay)
     return None
-
-from vartools.result import download_pub_variant_assay
 
 @click.command()
 @click.argument('variant')
 @click.argument('assay')
 def pub_download(variant, assay):
+
+    from vartools.result import download_pub_variant_assay
+
     download_pub_variant_assay(variant, assay)
     return None
-
-from vartools.result import create_directory
 
 @click.command()
 @click.option('-c','-check_all','check_all',default = "True")
 def directory(check_all):
+
+    from vartools.result import create_directory
+
     if check_all == "True":
         check = True
     elif check_all == "False":
@@ -162,18 +171,22 @@ def directory(check_all):
     create_directory(check)
     return None
 
-from vartools.datadump import rebuild_datadump
 
 @click.command()
 def rebuild_database():
+
+    from vartools.datadump import rebuild_datadump
+
     rebuild_datadump()
     return None
 
-from vartools.datadump import export_datadump
 
 @click.command()
 @click.argument('gene')
 def datadump(gene):
+
+    from vartools.datadump import export_datadump
+
     rebuild_datadump()
     export_datadump(gene)
     return None
@@ -197,13 +210,15 @@ def oo():
     """ oocyte related commands """
     pass
 
-from vartools.oo_prepare import convert_all
 
 @click.command()
 @click.argument('files', nargs = -1)
 @click.option('-o','--output', 'output', default=getcwd())
 def prepare(files, output):
     """ convert an excel file to the oocytes format """
+
+    from vartools.oo_prepare import convert_all
+
     abs_files = []
     for f in files:
         abs_f = abspath(f)
