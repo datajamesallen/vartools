@@ -186,6 +186,7 @@ def rebuild_database():
 @click.argument('gene')
 def datadump(gene):
 
+    from vartools.datadump import rebuild_datadump
     from vartools.datadump import export_datadump
 
     rebuild_datadump()
